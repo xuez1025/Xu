@@ -1,3 +1,7 @@
 # blox fruit pvp op
 
-## script:"ez"
+## script
+ezzzzzzzzzz
+
+#last updates
+2025/12/20
