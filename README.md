@@ -1,7 +1,7 @@
 # blox fruit pvp op
 
-### script
-
+### script:
+'''ezzzz'''
 
 
 ## last updates
