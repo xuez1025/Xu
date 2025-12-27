@@ -10,15 +10,13 @@ local RegisterHit = Net:WaitForChild("RE/RegisterHit")
 local EnemiesFolder = workspace:WaitForChild("Enemies")
 local CharactersFolder = workspace:WaitForChild("Characters")
 
--- 設定表
 local Settings = {
     AutoClick = true,
-    Distance = 0,           -- 初始攻擊距離 (米)
+    Distance = 0,
     AttackInterval = 0.05,
     MaxTargets = 20
 }
 
--- 判斷存活
 local function IsAlive(char)
     local hum = char:FindFirstChild("Humanoid")
     return hum and hum.Health > 0
@@ -46,10 +44,10 @@ frame.Parent = gui
 
 -- 標題
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, -40, 0, 30)
+title.Size = UDim2.new(1, -60, 0, 30)
 title.Position = UDim2.new(0, 0, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Xu hub fastattack"
+title.Text = "FastAttack 控制面板"
 title.TextColor3 = Color3.fromRGB(255,255,255)
 title.TextScaled = true
 title.Parent = frame
@@ -67,6 +65,37 @@ closeBtn.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
+-- 縮小按鈕
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.fromOffset(30,30)
+minimizeBtn.Position = UDim2.new(1, -60, 0, 0)
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(100,100,100)
+minimizeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+minimizeBtn.Text = "-"
+minimizeBtn.TextScaled = true
+minimizeBtn.Parent = frame
+
+local minimizedFrame = nil
+local function minimize()
+    frame.Visible = false
+    minimizedFrame = Instance.new("TextButton")
+    minimizedFrame.Size = UDim2.fromOffset(50,50)
+    minimizedFrame.Position = frame.Position
+    minimizedFrame.BackgroundColor3 = Color3.fromRGB(0,0,0)  -- 黑底
+    minimizedFrame.BorderSizePixel = 0
+    minimizedFrame.Text = "Xu"
+    minimizedFrame.TextColor3 = Color3.fromRGB(255,255,255)   -- 白字
+    minimizedFrame.TextScaled = true
+    minimizedFrame.Parent = gui
+    minimizedFrame.MouseButton1Click:Connect(function()
+        frame.Visible = true
+        minimizedFrame:Destroy()
+        minimizedFrame = nil
+    end)
+end
+
+minimizeBtn.MouseButton1Click:Connect(minimize)
+
 -- 自動攻擊開關
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(1,-20,0,40)
@@ -76,7 +105,6 @@ toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
 toggleBtn.TextScaled = true
 toggleBtn.Text = "自動攻擊: 開"
 toggleBtn.Parent = frame
-
 toggleBtn.MouseButton1Click:Connect(function()
     Settings.AutoClick = not Settings.AutoClick
     toggleBtn.Text = "自動攻擊: "..(Settings.AutoClick and "開" or "關")
@@ -93,7 +121,7 @@ label.Text = "攻擊距離: "..Settings.Distance.." 米"
 label.TextXAlignment = Enum.TextXAlignment.Left
 label.Parent = frame
 
--- 攻擊距離輸入框
+-- 輸入框
 local inputBox = Instance.new("TextBox")
 inputBox.Size = UDim2.new(0,80,0,25)
 inputBox.Position = UDim2.new(0,170,0,90)
@@ -104,7 +132,7 @@ inputBox.ClearTextOnFocus = false
 inputBox.Text = tostring(Settings.Distance)
 inputBox.Parent = frame
 
--- 最大值提示標題
+-- 最大值提示
 local maxLabel = Instance.new("TextLabel")
 maxLabel.Size = UDim2.new(0,100,0,25)
 maxLabel.Position = UDim2.new(0,260,0,90)
@@ -130,9 +158,8 @@ fill.BorderSizePixel = 0
 fill.Parent = slider
 
 local dragging = false
-local MAX_DISTANCE = 1000 -- 最大距離 1000 米
+local MAX_DISTANCE = 1000
 
--- 滑桿拖動邏輯
 slider.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -157,7 +184,6 @@ slider.InputChanged:Connect(function(input)
     end
 end)
 
--- 輸入框修改距離
 inputBox.FocusLost:Connect(function(enterPressed)
     if enterPressed then
         local val = tonumber(inputBox.Text)
@@ -180,7 +206,6 @@ task.spawn(function()
             local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
             if root then
                 local targets = {}
-
                 for _, folder in ipairs({EnemiesFolder, CharactersFolder}) do
                     for _, obj in ipairs(folder:GetChildren()) do
                         if obj ~= Player.Character then
