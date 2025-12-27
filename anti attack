@@ -1,13 +1,15 @@
+-- ================== Services ==================
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 
--- 狀態
+-- ================== 狀態 ==================
 local antiKnockbackEnabled = true
 local heartbeatConnection
 
--- ========== 防擊退邏輯 ==========
+-- ================== 防擊退核心 ==================
 local function enableAntiKnockback(character)
     local root = character:WaitForChild("HumanoidRootPart")
 
@@ -30,55 +32,91 @@ local function disableAntiKnockback()
     end
 end
 
--- 角色生成
-local function onCharacterAdded(character)
-    if antiKnockbackEnabled then
-        enableAntiKnockback(character)
-    end
-end
-
-player.CharacterAdded:Connect(onCharacterAdded)
-
-if player.Character then
-    onCharacterAdded(player.Character)
-end
-
--- ========== GUI ==========
+-- ================== GUI 建立 ==================
 local gui = Instance.new("ScreenGui")
 gui.Name = "AntiKnockbackGui"
 gui.ResetOnSpawn = false
+gui.Enabled = true
 gui.Parent = player:WaitForChild("PlayerGui")
 
-local button = Instance.new("TextButton")
-button.Size = UDim2.fromOffset(220, 50)
-button.Position = UDim2.fromScale(0.5, 0.85) - UDim2.fromOffset(110, 25)
-button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.TextScaled = true
-button.Parent = gui
+local frame = Instance.new("Frame")
+frame.Size = UDim2.fromOffset(260, 140)
+frame.Position = UDim2.fromScale(0.5, 0.8) - UDim2.fromOffset(130, 70)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.Parent = gui
 
-local function updateButton()
+-- ================== 右上角叉叉 ==================
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.fromOffset(30, 30)
+closeButton.Position = UDim2.fromScale(1, 0) - UDim2.fromOffset(35, -5)
+closeButton.Text = "x"
+closeButton.TextScaled = true
+closeButton.BackgroundColor3 = Color3.fromRGB(140, 40, 40)
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.Parent = frame
+
+-- ================== 防擊退按鈕 ==================
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.fromOffset(240, 45)
+toggleButton.Position = UDim2.fromOffset(10, 50)
+toggleButton.TextScaled = true
+toggleButton.Parent = frame
+
+-- ================== UI 更新 ==================
+local function updateToggleButton()
     if antiKnockbackEnabled then
-        button.Text = "Anti-Knockback : ON"
-        button.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+        toggleButton.Text = "Anti attack : ON (Q)"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
     else
-        button.Text = "Anti-Knockback : OFF"
-        button.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
+        toggleButton.Text = "Anti attack : OFF (Q)"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(120, 40, 40)
     end
 end
 
-updateButton()
-
-button.MouseButton1Click:Connect(function()
+-- ================== 切換邏輯（唯一入口） ==================
+local function toggleAntiKnockback()
     antiKnockbackEnabled = not antiKnockbackEnabled
 
-    if antiKnockbackEnabled then
-        if player.Character then
-            enableAntiKnockback(player.Character)
-        end
+    if antiKnockbackEnabled and player.Character then
+        enableAntiKnockback(player.Character)
     else
         disableAntiKnockback()
     end
 
-    updateButton()
+    updateToggleButton()
+end
+
+updateToggleButton()
+
+-- ================== 按鈕點擊 ==================
+toggleButton.MouseButton1Click:Connect(toggleAntiKnockback)
+
+-- ================== 叉叉關閉並重製 ==================
+local function resetAll()
+    antiKnockbackEnabled = false
+    disableAntiKnockback()
+    gui.Enabled = false
+    updateToggleButton()
+end
+
+closeButton.MouseButton1Click:Connect(resetAll)
+
+-- ================== 快捷鍵 Q ==================
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+
+    if input.KeyCode == Enum.KeyCode.Q and gui.Enabled then
+        toggleAntiKnockback()
+    end
 end)
+
+-- ================== 角色生成 ==================
+player.CharacterAdded:Connect(function(character)
+    if antiKnockbackEnabled then
+        enableAntiKnockback(character)
+    end
+end)
+
+if player.Character and antiKnockbackEnabled then
+    enableAntiKnockback(player.Character)
+end
