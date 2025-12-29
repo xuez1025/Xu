@@ -20,6 +20,7 @@ local allowedUsers = {
     [8333444648] = true,
     [7270812903] = true,
     [5293279536] = true,
+    [5145281721] = true,
 }
 
 if not allowedUsers[player.UserId] then
