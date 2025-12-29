@@ -14,3 +14,4 @@ if allowedUsers[player.UserId] ~= true then
 end
 
 print("授權通過，開始執行腳本")
+loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
