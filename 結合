@@ -1,0 +1,342 @@
+-- ===== 基本服務 =====
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
+-- ===== FastAttack 核心 =====
+local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+local EnemiesFolder = workspace:WaitForChild("Enemies")
+local CharactersFolder = workspace:WaitForChild("Characters")
+
+_G.FastAttack = true
+local Settings = {
+    AutoClick = true,
+    Distance = 50,
+    AttackInterval = 0.01,
+    MaxTargets = 20
+}
+
+local function IsAlive(char)
+    local hum = char:FindFirstChild("Humanoid")
+    return hum and hum.Health > 0
+end
+
+-- ===== Xu-hub UI =====
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = PlayerGui
+screenGui.Name = "XuHubGui"
+
+-- 小長方形開關
+local toggleBtn = Instance.new("TextButton")
+toggleBtn.Size = UDim2.new(0,120,0,50)
+toggleBtn.Position = UDim2.new(0.5,-60,0,0)
+toggleBtn.Text = "Xu-hub"
+toggleBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+toggleBtn.BorderSizePixel = 0
+toggleBtn.TextScaled = true
+toggleBtn.Parent = screenGui
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0,10)
+toggleCorner.Parent = toggleBtn
+
+-- 主框架
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0,900,0,650)
+mainFrame.Position = UDim2.new(0.5,-450,0.5,-325)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+mainFrame.BackgroundTransparency = 0.3
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0,10)
+UICorner.Parent = mainFrame
+
+-- 標題列
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1,0,0,50)
+titleBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
+titleBar.BackgroundTransparency = 0.3
+titleBar.Parent = mainFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1,-20,1,0)
+titleLabel.Position = UDim2.new(0,10,0,0)
+titleLabel.Text = "Xu-hub"
+titleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextSize = 32
+titleLabel.Parent = titleBar
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0,30,0,30)
+closeBtn.Position = UDim2.new(1,-40,0,10)
+closeBtn.Text = "X"
+closeBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+closeBtn.BackgroundTransparency = 0.2
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.Parent = titleBar
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame:Destroy()
+    toggleBtn:Destroy()
+end)
+
+-- 左側側欄
+local sideBar = Instance.new("ScrollingFrame")
+sideBar.Size = UDim2.new(0,180,1,-50)
+sideBar.Position = UDim2.new(0,0,0,50)
+sideBar.BackgroundColor3 = Color3.fromRGB(50,50,50)
+sideBar.BackgroundTransparency = 0.4
+sideBar.BorderSizePixel = 0
+sideBar.ScrollBarThickness = 6
+sideBar.Parent = mainFrame
+local sideUICorner = Instance.new("UICorner")
+sideUICorner.CornerRadius = UDim.new(0,10)
+sideUICorner.Parent = sideBar
+
+-- 右側內容區
+local contentFrame = Instance.new("ScrollingFrame")
+contentFrame.Size = UDim2.new(1,-180,1,-50)
+contentFrame.Position = UDim2.new(0,180,0,50)
+contentFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+contentFrame.BackgroundTransparency = 0.8
+contentFrame.BorderSizePixel = 0
+contentFrame.Parent = mainFrame
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0,10)
+contentCorner.Parent = contentFrame
+
+-- ===== 側欄按鈕 (PVP + XXX2~XXX10) =====
+local buttons = {}
+for i=1,10 do
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,-20,0,50)
+    btn.Position = UDim2.new(0,10,0,10 + (i-1)*60)
+    btn.Text = (i==1) and "PVP" or "XXX"..i
+    btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.BorderSizePixel = 0
+    btn.Parent = sideBar
+
+    local btnCorner = Instance.new("UICorner")
+    btnCorner.CornerRadius = UDim.new(0,10)
+    btnCorner.Parent = btn
+
+    local indicator = Instance.new("Frame")
+    indicator.Size = UDim2.new(0,4,1,0)
+    indicator.Position = UDim2.new(0,0,0,0)
+    indicator.BackgroundColor3 = Color3.fromRGB(0,120,255)
+    indicator.Visible = false
+    indicator.Parent = btn
+
+    buttons[i] = {Button = btn, Indicator = indicator}
+end
+
+-- ===== PVP / 其他右側內容生成函數 =====
+local function createOptionRow(parent, yPos, labelText, contentFunc)
+    local rowFrame = Instance.new("Frame")
+    rowFrame.Size = UDim2.new(1,-20,0,50)
+    rowFrame.Position = UDim2.new(0,10,0,yPos)
+    rowFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    rowFrame.BorderSizePixel = 0
+    rowFrame.Parent = parent
+
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.CornerRadius = UDim.new(0,10)
+    rowCorner.Parent = rowFrame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0,120,1,0)
+    label.Position = UDim2.new(0,10,0,0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = rowFrame
+
+    contentFunc(rowFrame)
+    return rowFrame
+end
+
+local function showContent(index)
+    contentFrame:ClearAllChildren()
+    for i,b in ipairs(buttons) do
+        b.Indicator.Visible = (i==index)
+    end
+
+    local y = 10
+    if index == 1 then -- PVP
+        -- 自動攻擊 ON/OFF
+        createOptionRow(contentFrame, y, "自動攻擊:", function(row)
+            local onBtn = Instance.new("TextButton")
+            onBtn.Size = UDim2.new(0,50,0.6,0)
+            onBtn.Position = UDim2.new(0,130,0.2,0)
+            onBtn.Text = "ON"
+            onBtn.TextScaled = true
+            onBtn.BackgroundColor3 = Settings.AutoClick and Color3.fromRGB(0,200,0) or Color3.fromRGB(70,70,70)
+            onBtn.TextColor3 = Color3.fromRGB(255,255,255)
+            onBtn.Parent = row
+            local offBtn = Instance.new("TextButton")
+            offBtn.Size = UDim2.new(0,50,0.6,0)
+            offBtn.Position = UDim2.new(0,190,0.2,0)
+            offBtn.Text = "OFF"
+            offBtn.TextScaled = true
+            offBtn.BackgroundColor3 = Settings.AutoClick and Color3.fromRGB(70,70,70) or Color3.fromRGB(200,0,0)
+            offBtn.TextColor3 = Color3.fromRGB(255,255,255)
+            offBtn.Parent = row
+
+            onBtn.MouseButton1Click:Connect(function()
+                Settings.AutoClick = true
+                onBtn.BackgroundColor3 = Color3.fromRGB(0,200,0)
+                offBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            end)
+            offBtn.MouseButton1Click:Connect(function()
+                Settings.AutoClick = false
+                offBtn.BackgroundColor3 = Color3.fromRGB(200,0,0)
+                onBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            end)
+        end)
+        y = y + 60
+
+        -- 攻擊距離
+        createOptionRow(contentFrame, y, "攻擊距離:", function(row)
+            local inputBox = Instance.new("TextBox")
+            inputBox.Size = UDim2.new(0,80,0.6,0)
+            inputBox.Position = UDim2.new(0,130,0.2,0)
+            inputBox.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            inputBox.TextColor3 = Color3.fromRGB(255,255,255)
+            inputBox.TextScaled = true
+            inputBox.ClearTextOnFocus = false
+            inputBox.Text = tostring(Settings.Distance)
+            inputBox.Parent = row
+
+            local slider = Instance.new("Frame")
+            slider.Size = UDim2.new(0,200,0.3,0)
+            slider.Position = UDim2.new(0,220,0.35,0)
+            slider.BackgroundColor3 = Color3.fromRGB(100,100,100)
+            slider.Parent = row
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new(Settings.Distance/1000,0,1,0)
+            fill.BackgroundColor3 = Color3.fromRGB(255,200,0)
+            fill.Parent = slider
+
+            local maxLabel = Instance.new("TextLabel")
+            maxLabel.Size = UDim2.new(0,80,1,0)
+            maxLabel.Position = UDim2.new(0,430,0,0)
+            maxLabel.BackgroundTransparency = 1
+            maxLabel.Text = "(max:1000m)"
+            maxLabel.TextColor3 = Color3.fromRGB(200,200,200)
+            maxLabel.TextScaled = true
+            maxLabel.TextXAlignment = Enum.TextXAlignment.Left
+            maxLabel.Parent = row
+
+            local dragging = false
+            local MAX_DISTANCE = 1000
+
+            slider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+            end)
+            slider.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+            end)
+            slider.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local mouseX = input.Position.X - slider.AbsolutePosition.X
+                    mouseX = math.clamp(mouseX,0,slider.AbsoluteSize.X)
+                    local distance = (mouseX/slider.AbsoluteSize.X)*MAX_DISTANCE
+                    Settings.Distance = distance
+                    inputBox.Text = tostring(math.floor(distance))
+                    fill.Size = UDim2.new(mouseX/slider.AbsoluteSize.X,0,1,0)
+                end
+            end)
+            inputBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed then
+                    local val = tonumber(inputBox.Text)
+                    if val then
+                        local distance = math.clamp(val,0,MAX_DISTANCE)
+                        Settings.Distance = distance
+                        inputBox.Text = tostring(math.floor(distance))
+                        fill.Size = UDim2.new(distance/MAX_DISTANCE,0,1,0)
+                    else
+                        inputBox.Text = tostring(math.floor(Settings.Distance))
+                    end
+                end
+            end)
+        end)
+        y = y + 60
+    else
+        -- 其他按鈕內容也改成底色選項
+        createOptionRow(contentFrame, y, "選項"..index, function(row)
+            local infoLabel = Instance.new("TextLabel")
+            infoLabel.Size = UDim2.new(1,-20,1,0)
+            infoLabel.Position = UDim2.new(0,10,0,0)
+            infoLabel.Text = "這是 XXX"..index.." 的功能區"
+            infoLabel.TextColor3 = Color3.fromRGB(255,255,255)
+            infoLabel.BackgroundTransparency = 1
+            infoLabel.TextScaled = true
+            infoLabel.TextXAlignment = Enum.TextXAlignment.Left
+            infoLabel.Parent = row
+        end)
+    end
+end
+
+for i,b in ipairs(buttons) do
+    b.Button.MouseButton1Click:Connect(function()
+        showContent(i)
+    end)
+end
+
+-- 顯示 / 隱藏主框架
+toggleBtn.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+end)
+
+-- ===== FastAttack 核心執行 =====
+task.spawn(function()
+    while _G.FastAttack do
+        if Settings.AutoClick then
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                local targets = {}
+                for _, folder in ipairs({EnemiesFolder, CharactersFolder}) do
+                    for _, obj in ipairs(folder:GetChildren()) do
+                        if obj ~= player.Character then
+                            local head = obj:FindFirstChild("Head")
+                            if head and IsAlive(obj) then
+                                local dist = (head.Position - root.Position).Magnitude
+                                if dist <= Settings.Distance then
+                                    table.insert(targets,{obj,head})
+                                    if #targets >= Settings.MaxTargets then break end
+                                end
+                            end
+                        end
+                        if #targets >= Settings.MaxTargets then break end
+                    end
+                    if #targets >= Settings.MaxTargets then break end
+                end
+
+                local aliveTargets = {}
+                for _, t in ipairs(targets) do
+                    if IsAlive(t[1]) then
+                        table.insert(aliveTargets, t)
+                    end
+                end
+
+                if #aliveTargets > 0 then
+                    RegisterAttack:FireServer(0)
+                    RegisterHit:FireServer(aliveTargets[1][2], aliveTargets)
+                end
+            end
+        end
+        task.wait(Settings.AttackInterval)
+    end
+end)
