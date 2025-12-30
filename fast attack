@@ -13,7 +13,7 @@ local CharactersFolder = workspace:WaitForChild("Characters")
 local Settings = {
     AutoClick = true,
     Distance = 0,
-    AttackInterval = 0.05,
+    AttackInterval = 0.01,
     MaxTargets = 20
 }
 
