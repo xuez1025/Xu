@@ -22,7 +22,7 @@ uicorner.CornerRadius = UDim.new(0, 15)
 local isFlying = false
 local flyConnection
 local baseSpeed = 0.1
-local hoverHeight = 5
+local hoverHeight = 10 -- 初始高度改成 10
 local RANGE_MAX = 2000
 local rangeValue = 500
 local targetNPC
@@ -79,7 +79,7 @@ infoLabel.Font = Enum.Font.SourceSansBold
 local hoverLabel = Instance.new("TextLabel", frame)
 hoverLabel.Size = UDim2.new(0, 240, 0, 25)
 hoverLabel.Position = UDim2.new(0.5, -120, 0, 140)
-hoverLabel.Text = "飛行高度: 5"
+hoverLabel.Text = "飛行高度: 10"
 hoverLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 hoverLabel.BackgroundTransparency = 1
 hoverLabel.TextScaled = true
@@ -93,7 +93,7 @@ local cornerHover = Instance.new("UICorner", sliderHover)
 cornerHover.CornerRadius = UDim.new(0, 10)
 local handleHover = Instance.new("Frame", sliderHover)
 handleHover.Size = UDim2.new(0, 20, 1, 0)
-handleHover.Position = UDim2.new(0.1, -10, 0, 0)
+handleHover.Position = UDim2.new(10/50, -10, 0, 0) -- 初始位置對應高度 10
 handleHover.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 local handleCorner = Instance.new("UICorner", handleHover)
 handleCorner.CornerRadius = UDim.new(0, 10)
