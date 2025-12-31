@@ -220,6 +220,28 @@ local function showContent(index)
 
     if index == 1 then -- PVP
         local y = 10
+
+		    -- ===== 大標題 =====
+    local mainTitle = Instance.new("TextLabel")
+    mainTitle.Size = UDim2.new(1, -20, 0, 40)
+    mainTitle.Position = UDim2.new(0, 10, 0, y)
+    mainTitle.BackgroundTransparency = 1
+    mainTitle.Text = "PVP 自動攻擊與免控設定"
+    mainTitle.TextColor3 = Color3.fromRGB(50, 50, 50)
+    mainTitle.Font = Enum.Font.SourceSansBold
+    mainTitle.TextScaled = true
+    mainTitle.TextXAlignment = Enum.TextXAlignment.Left
+    mainTitle.Parent = contentFrame
+
+    -- 彩虹顏色效果
+local hue = 0
+RunService.RenderStepped:Connect(function(dt)
+    hue = (hue + dt/2) % 1 -- 速度可調整，越小越慢
+    mainTitle.TextColor3 = Color3.fromHSV(hue,1,1)
+end)
+
+	y = y + 40 -- 下一個選項的 y 位置
+
         -- 自動攻擊開關
         createOptionRow(contentFrame, y, "自動攻擊:", function(row)
             local switchBg = Instance.new("Frame")
