@@ -709,15 +709,195 @@ task.spawn(function()
 end)
 
     elseif index == 6 then
+local flyEnabled = false
+local flyConnection
+local hoverHeight = 10
+local rangeValue = 500
+local baseSpeed = 0.1
+local targetNPC
+
+-- ===== 工具函式：建立行容器 =====
+local function createLine(parent, yOffset, height)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, -20, 0, height)
+    frame.Position = UDim2.new(0, 10, 0, yOffset)
+    frame.BackgroundTransparency = 1
+    frame.Parent = parent
+    return frame
+end
+
+-- ===== Farm 分頁整合飛行功能 =====
+    local y = 10
+    local lineHeight = 90
+    local lineSpacing = 10
+
+    local function createLine(parent, yPos, height)
+        local frame = Instance.new("Frame")
+        frame.Size = UDim2.new(1, -20, 0, height)
+        frame.Position = UDim2.new(0, 10, 0, yPos)
+        frame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+        frame.BorderSizePixel = 0
+        local corner = Instance.new("UICorner", frame)
+        corner.CornerRadius = UDim.new(0, 12)
+        frame.Parent = parent
+        return frame
+    end
+
+    local labelTitle = Instance.new("TextLabel")
+    labelTitle.Size = UDim2.new(1, 0, 0, 50)
+    labelTitle.Position = UDim2.new(0, 0, 0, 0)
+    labelTitle.Text = "飛行到 NPC"
+    labelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    labelTitle.BackgroundTransparency = 1
+    labelTitle.Font = Enum.Font.SourceSansBold
+    labelTitle.TextSize = 40
+    labelTitle.TextXAlignment = Enum.TextXAlignment.Left
+    labelTitle.Parent = contentFrame
+
+    y = y + 50 + 10
+
+    -- 飛行開關
+    local flyFrame = createLine(contentFrame, y, lineHeight)
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(0, 200, 0, 40)
+    toggleButton.Position = UDim2.new(0, 10, 0, 10)
+    toggleButton.Text = "飛行: OFF"
+    toggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    toggleButton.Font = Enum.Font.SourceSansBold
+    toggleButton.TextScaled = true
+    toggleButton.Parent = flyFrame
+    Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 8)
+
+    y = y + lineHeight + lineSpacing
+
+    -- 飛行高度與範圍滑桿設置
+    local SLIDER_LENGTH = 240
+    local SLIDER_HEIGHT = 20
+    local HANDLE_SIZE = 20
+    local MAX_HEIGHT = 50
+    local MAX_RANGE = 2000
+    local hoverHeight = 10
+    local rangeValue = 500
+    local draggingSlider = false
+
+    local function createSlider(parent, yPos, titleText, maxValue, initialValue, color)
+        local frame = createLine(parent, yPos, 50)
         local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "Farm"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.Size = UDim2.new(0, 240, 0, 25)
+        label.Position = UDim2.new(0, 10, 0, 5)
+        label.TextColor3 = Color3.fromRGB(255, 255, 255)
         label.BackgroundTransparency = 1
+        label.TextScaled = true
         label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 40
-        label.Parent = contentFrame
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.Parent = frame
+        local sliderLabel = titleText..": "..initialValue
+        label.Text = sliderLabel
+
+        local slider = Instance.new("Frame")
+        slider.Size = UDim2.new(0, SLIDER_LENGTH, 0, SLIDER_HEIGHT)
+        slider.Position = UDim2.new(0, 10, 0, 25)
+        slider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+        slider.Parent = frame
+        Instance.new("UICorner", slider).CornerRadius = UDim.new(0, 10)
+
+        local handle = Instance.new("Frame")
+        handle.Size = UDim2.new(0, HANDLE_SIZE, 1, 0)
+        handle.Position = UDim2.new(initialValue/maxValue, -HANDLE_SIZE/2, 0, 0)
+        handle.BackgroundColor3 = color
+        handle.Parent = slider
+        Instance.new("UICorner", handle).CornerRadius = UDim.new(0, 10)
+
+        local dragging = false
+        handle.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                draggingSlider = true
+            end
+        end)
+        handle.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = false
+                draggingSlider = false
+            end
+        end)
+
+        local function update(input)
+            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                local mouseX = input.Position.X
+                local basePos = slider.AbsolutePosition.X
+                local baseSize = slider.AbsoluteSize.X
+                local relativePos = math.clamp(mouseX - basePos, 0, baseSize)
+                handle.Position = UDim2.new(0, relativePos - HANDLE_SIZE/2, 0, 0)
+                local value = math.floor((relativePos / baseSize) * maxValue)
+                if titleText == "飛行高度" then
+                    hoverHeight = value
+                else
+                    rangeValue = value
+                end
+                label.Text = titleText..": "..value
+            end
+        end
+
+        handle.InputChanged:Connect(update)
+        slider.InputChanged:Connect(update)
+    end
+
+    createSlider(contentFrame, y, "飛行高度", MAX_HEIGHT, hoverHeight, Color3.fromRGB(255, 50, 50))
+    y = y + 50 + 10
+    createSlider(contentFrame, y, "範圍", MAX_RANGE, rangeValue, Color3.fromRGB(0, 255, 0))
+
+    -- 飛行邏輯
+    local isFlying = false
+    local flyConnection
+    local player = game:GetService("Players").LocalPlayer
+
+    local function stopFlying()
+        if flyConnection then
+            flyConnection:Disconnect()
+            flyConnection = nil
+        end
+        isFlying = false
+        toggleButton.Text = "飛行: OFF"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    end
+
+    toggleButton.MouseButton1Click:Connect(function()
+        isFlying = not isFlying
+        if isFlying then
+            toggleButton.Text = "飛行: ON"
+            toggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+            if not flyConnection then
+                flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                    local character = player.Character or player.CharacterAdded:Wait()
+                    local hrp = character:WaitForChild("HumanoidRootPart")
+                    local enemiesFolder = workspace:FindFirstChild("Enemies")
+                    local nearest = nil
+                    local minDist = math.huge
+                    if enemiesFolder then
+                        for _, npc in pairs(enemiesFolder:GetChildren()) do
+                            if npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
+                                local npcPos = npc:FindFirstChild("Head") and npc.Head.Position or npc.HumanoidRootPart.Position
+                                local dist = (npcPos - hrp.Position).Magnitude
+                                if dist < minDist and dist <= rangeValue then
+                                    minDist = dist
+                                    nearest = npc
+                                end
+                            end
+                        end
+                    end
+                    if nearest then
+                        local targetPos = nearest:FindFirstChild("Head") and nearest.Head.Position or nearest.HumanoidRootPart.Position
+                        targetPos = targetPos + Vector3.new(0, hoverHeight, 0)
+                        hrp.CFrame = CFrame.new(hrp.Position:Lerp(targetPos, 0.1))
+                    end
+                end)
+            end
+        else
+            stopFlying()
+        end
+    end)
 
     elseif index == 7 then
         local label = Instance.new("TextLabel")
