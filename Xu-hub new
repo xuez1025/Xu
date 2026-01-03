@@ -182,37 +182,117 @@ for i=1,10 do
     buttons[i] = {Button = btn, Indicator = indicator}
 end
 
--- ===== 右側內容區功能函數（全部移除，只保留結構） =====
+-- ===== 右側內容區功能函數 =====
 local function contentFunction(index)
     if index == 1 then
-        -- 通用
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "通用"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize =40
+        label.Parent = contentFrame
 
     elseif index == 2 then
-        -- 設定
-
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "設定"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 40
+        label.Parent = contentFrame
+        
     elseif index == 3 then
-        -- Server
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "server"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 40
+        label.Parent = contentFrame
 
     elseif index == 4 then
-        -- Status
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "狀態"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 40
+        label.Parent = contentFrame
 
     elseif index == 5 then
-    
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = " PVP "
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize =40
+        label.Parent = contentFrame
 
     elseif index == 6 then
-        -- Farm
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "Farm"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 40
+        label.Parent = contentFrame
 
     elseif index == 7 then
-        -- 其他
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "待開發"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 80
+        label.Parent = contentFrame
 
     elseif index == 8 then
-        -- 我太帥了
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "待開發"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 80
+        label.Parent = contentFrame
 
     elseif index == 9 then
-        -- 天生可能就很帥了
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "待開發"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 80
+        label.Parent = contentFrame
 
     elseif index == 10 then
-        -- 好像是
+        local label = Instance.new("TextLabel")
+        label.Size = UDim2.new(1,0,0,50)
+        label.Position = UDim2.new(0,0,0,0)
+        label.Text = "待開發"
+        label.TextColor3 = Color3.fromRGB(255,255,255)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.SourceSansBold
+        label.TextSize = 80
+        label.Parent = contentFrame
     end
 end
 
