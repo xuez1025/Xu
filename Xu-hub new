@@ -209,202 +209,206 @@ local function contentFunction(index)
         label.Parent = contentFrame
 
     elseif index == 5 then
-    -- ===== PVP 自動攻擊設定 =====
-    local Settings = {
-        AutoClick = true,      -- 初始自動攻擊 ON
-        Distance = 50,
-        AttackInterval = 0.01,
-        MaxTargets = 20
-    }
+-- ===== PVP 自動攻擊設定 =====
+local Settings = {
+    AutoClick = true,      -- 初始自動攻擊 ON
+    Distance = 50,
+    AttackInterval = 0.01,
+    MaxTargets = 20
+}
 
-    local startY = 10      -- 與標題間隔
-    local lineHeight = 60  -- 功能行高度
-    local spacing = 15     -- 行間距
+-- 初始 y
+local y = 10  
+local lineHeight = 60
+local lineSpacing = 10  -- 行間距
 
-    -- 創建功能行
-    local function createLine(parent, yPos, height)
-        local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(1,-20,0,height)
-        frame.Position = UDim2.new(0,10,0,yPos)
-        frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
-        frame.BorderSizePixel = 0
+-- 創建功能行
+local function createLine(parent, yPos, height)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1,-20,0,height)
+    frame.Position = UDim2.new(0,10,0,yPos)
+    frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
+    frame.BorderSizePixel = 0
 
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0,12)
-        corner.Parent = frame
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0,12)
+    corner.Parent = frame
 
-        frame.Parent = parent
-        return frame
+    frame.Parent = parent
+    return frame
+end
+
+-- ===== 自動攻擊開關 =====
+local autoFrame = createLine(contentFrame, y, lineHeight)
+
+local labelAuto = Instance.new("TextLabel")
+labelAuto.Size = UDim2.new(0,150,1,0)
+labelAuto.Position = UDim2.new(0,10,0,0)
+labelAuto.BackgroundTransparency = 1
+labelAuto.Text = "自動攻擊"
+labelAuto.TextColor3 = Color3.fromRGB(255,255,255)
+labelAuto.TextScaled = true
+labelAuto.Font = Enum.Font.SourceSansBold
+labelAuto.TextXAlignment = Enum.TextXAlignment.Left
+labelAuto.Parent = autoFrame
+
+local switchBG = Instance.new("Frame")
+switchBG.Size = UDim2.new(0,60,0,30)
+switchBG.Position = UDim2.new(1,-80,0,(lineHeight-30)/2)
+switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
+switchBG.BorderSizePixel = 0
+switchBG.Parent = autoFrame
+
+local switchCorner = Instance.new("UICorner")
+switchCorner.CornerRadius = UDim.new(0,15)
+switchCorner.Parent = switchBG
+
+local knob = Instance.new("Frame")
+knob.Size = UDim2.new(0,28,0,28)
+knob.Position = UDim2.new(1,-29,0,1)
+knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+knob.BorderSizePixel = 0
+knob.Parent = switchBG
+
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(0,14)
+knobCorner.Parent = knob
+
+local function toggleSwitch()
+    Settings.AutoClick = not Settings.AutoClick
+    if Settings.AutoClick then
+        knob:TweenPosition(UDim2.new(1,-29,0,1),"Out","Quad",0.2,true)
+        switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
+    else
+        knob:TweenPosition(UDim2.new(0,1,0,1),"Out","Quad",0.2,true)
+        switchBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
+    end
+end
+
+switchBG.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        toggleSwitch()
+    end
+end)
+
+-- 下一行 y（加行高 + 間距）
+y = y + lineHeight + lineSpacing  
+
+-- ===== 攻擊距離滑桿 =====
+local distFrame = createLine(contentFrame, y, lineHeight)
+
+local MAX_DISTANCE = 1000
+local sliderWidth = 200
+
+local distLabel = Instance.new("TextLabel")
+distLabel.Size = UDim2.new(0,150,1,0)
+distLabel.Position = UDim2.new(0,10,0,0)
+distLabel.BackgroundTransparency = 1
+distLabel.TextColor3 = Color3.fromRGB(255,255,255)
+distLabel.TextScaled = true
+distLabel.Font = Enum.Font.SourceSansBold
+distLabel.TextXAlignment = Enum.TextXAlignment.Left
+distLabel.Text = "攻擊距離: "..Settings.Distance.." 米 (max:"..MAX_DISTANCE.."m)"
+distLabel.Parent = distFrame
+
+local slider = Instance.new("Frame")
+slider.Size = UDim2.new(0, sliderWidth, 0, 20)
+slider.Position = UDim2.new(1, -sliderWidth - 20, 0, (lineHeight-20)/2)
+slider.BackgroundColor3 = Color3.fromRGB(50,50,50)
+slider.BorderSizePixel = 0
+slider.Parent = distFrame
+
+local fill = Instance.new("Frame")
+fill.Size = UDim2.new(Settings.Distance/MAX_DISTANCE,0,1,0)
+fill.BackgroundColor3 = Color3.fromRGB(255,200,0)
+fill.BorderSizePixel = 0
+fill.Parent = slider
+
+local knobSlider = Instance.new("Frame")
+knobSlider.Size = UDim2.new(0,20,0,20)
+knobSlider.Position = UDim2.new(Settings.Distance/MAX_DISTANCE,-10,0,0)
+knobSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
+knobSlider.BorderSizePixel = 0
+knobSlider.Parent = slider
+
+local knobCorner = Instance.new("UICorner")
+knobCorner.CornerRadius = UDim.new(1,0)
+knobCorner.Parent = knobSlider
+
+-- 拖動邏輯
+local dragging = false
+slider.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+    end
+end)
+slider.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+slider.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mouseX = input.Position.X - slider.AbsolutePosition.X
+        mouseX = math.clamp(mouseX,0,slider.AbsoluteSize.X)
+        local distance = (mouseX/slider.AbsoluteSize.X) * MAX_DISTANCE
+        Settings.Distance = distance
+        distLabel.Text = "距離: "..math.floor(distance).." 米 (max:"..MAX_DISTANCE.."m)"
+        fill.Size = UDim2.new(mouseX/slider.AbsoluteSize.X,0,1,0)
+        knobSlider.Position = UDim2.new(mouseX/slider.AbsoluteSize.X,-10,0,0)
+    end
+end)
+
+-- 下一行 y
+y = y + lineHeight + lineSpacing  
+
+-- ===== 核心自動攻擊邏輯 =====
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Player = Players.LocalPlayer
+    local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+    local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+    local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+    local EnemiesFolder = workspace:WaitForChild("Enemies")
+    local CharactersFolder = workspace:WaitForChild("Characters")
+
+    local function IsAlive(char)
+        local hum = char:FindFirstChild("Humanoid")
+        return hum and hum.Health > 0
     end
 
-    -- ===== 自動攻擊開關 =====
-    local autoFrame = createLine(contentFrame, startY, lineHeight)
-
-    local labelAuto = Instance.new("TextLabel")
-    labelAuto.Size = UDim2.new(0,150,1,0)
-    labelAuto.Position = UDim2.new(0,10,0,0)
-    labelAuto.BackgroundTransparency = 1
-    labelAuto.Text = "自動攻擊"
-    labelAuto.TextColor3 = Color3.fromRGB(255,255,255)
-    labelAuto.TextScaled = true
-    labelAuto.Font = Enum.Font.SourceSansBold
-    labelAuto.TextXAlignment = Enum.TextXAlignment.Left
-    labelAuto.Parent = autoFrame
-
-    local switchBG = Instance.new("Frame")
-    switchBG.Size = UDim2.new(0,60,0,30)
-    switchBG.Position = UDim2.new(1,-80,0,(lineHeight-30)/2)
-    switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
-    switchBG.BorderSizePixel = 0
-    switchBG.Parent = autoFrame
-
-    local switchCorner = Instance.new("UICorner")
-    switchCorner.CornerRadius = UDim.new(0,15)
-    switchCorner.Parent = switchBG
-
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0,28,0,28)
-    knob.Position = UDim2.new(1,-29,0,1)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    knob.BorderSizePixel = 0
-    knob.Parent = switchBG
-
-    local knobCorner = Instance.new("UICorner")
-    knobCorner.CornerRadius = UDim.new(0,14)
-    knobCorner.Parent = knob
-
-    local function toggleSwitch()
-        Settings.AutoClick = not Settings.AutoClick
+    while true do
         if Settings.AutoClick then
-            knob:TweenPosition(UDim2.new(1,-29,0,1),"Out","Quad",0.2,true)
-            switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
-        else
-            knob:TweenPosition(UDim2.new(0,1,0,1),"Out","Quad",0.2,true)
-            switchBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
-        end
-    end
-
-    switchBG.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggleSwitch()
-        end
-    end)
-
-    startY = startY + lineHeight + spacing
-
-    -- ===== 攻擊距離滑桿 + 最大值顯示在文字旁 =====
-    local distFrame = createLine(contentFrame, startY, lineHeight)
-
-    local MAX_DISTANCE = 1000
-    local sliderWidth = 200
-
-    -- 距離文字 (包含最大值)
-    local distLabel = Instance.new("TextLabel")
-    distLabel.Size = UDim2.new(0,150,1,0)  -- 足夠寬度
-    distLabel.Position = UDim2.new(0,10,0,0)
-    distLabel.BackgroundTransparency = 1
-    distLabel.TextColor3 = Color3.fromRGB(255,255,255)
-    distLabel.TextScaled = true
-    distLabel.Font = Enum.Font.SourceSansBold
-    distLabel.TextXAlignment = Enum.TextXAlignment.Left
-    distLabel.Text = "攻擊距離: "..Settings.Distance.." 米 (max:"..MAX_DISTANCE.."m)"
-    distLabel.Parent = distFrame
-
-    -- 滑桿靠右
-    local slider = Instance.new("Frame")
-    slider.Size = UDim2.new(0, sliderWidth, 0, 20)
-    slider.Position = UDim2.new(1, -sliderWidth - 20, 0, (lineHeight-20)/2)
-    slider.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    slider.BorderSizePixel = 0
-    slider.Parent = distFrame
-
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new(Settings.Distance/MAX_DISTANCE,0,1,0)
-    fill.BackgroundColor3 = Color3.fromRGB(255,200,0)
-    fill.BorderSizePixel = 0
-    fill.Parent = slider
-
-    local knobSlider = Instance.new("Frame")
-    knobSlider.Size = UDim2.new(0,20,0,20)
-    knobSlider.Position = UDim2.new(Settings.Distance/MAX_DISTANCE,-10,0,0)
-    knobSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    knobSlider.BorderSizePixel = 0
-    knobSlider.Parent = slider
-
-    local knobCorner = Instance.new("UICorner")
-    knobCorner.CornerRadius = UDim.new(1,0)
-    knobCorner.Parent = knobSlider
-
-    -- 拖動邏輯
-    local dragging = false
-    slider.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-        end
-    end)
-    slider.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    slider.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local mouseX = input.Position.X - slider.AbsolutePosition.X
-            mouseX = math.clamp(mouseX,0,slider.AbsoluteSize.X)
-            local distance = (mouseX/slider.AbsoluteSize.X) * MAX_DISTANCE
-            Settings.Distance = distance
-            distLabel.Text = "距離: "..math.floor(distance).." 米 (max:"..MAX_DISTANCE.."m)"
-            fill.Size = UDim2.new(mouseX/slider.AbsoluteSize.X,0,1,0)
-            knobSlider.Position = UDim2.new(mouseX/slider.AbsoluteSize.X,-10,0,0)
-        end
-    end)
-
-    -- ===== 核心自動攻擊邏輯 =====
-    task.spawn(function()
-        local Players = game:GetService("Players")
-        local ReplicatedStorage = game:GetService("ReplicatedStorage")
-        local Player = Players.LocalPlayer
-        local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-        local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-        local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-        local EnemiesFolder = workspace:WaitForChild("Enemies")
-        local CharactersFolder = workspace:WaitForChild("Characters")
-
-        local function IsAlive(char)
-            local hum = char:FindFirstChild("Humanoid")
-            return hum and hum.Health > 0
-        end
-
-        while true do
-            if Settings.AutoClick then
-                local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local targets = {}
-                    for _, folder in ipairs({EnemiesFolder, CharactersFolder}) do
-                        for _, obj in ipairs(folder:GetChildren()) do
-                            if obj ~= Player.Character then
-                                local head = obj:FindFirstChild("Head")
-                                if head and IsAlive(obj) then
-                                    local dist = (head.Position - root.Position).Magnitude
-                                    if dist <= Settings.Distance then
-                                        table.insert(targets,{obj,head})
-                                        if #targets >= Settings.MaxTargets then break end
-                                    end
+            local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                local targets = {}
+                for _, folder in ipairs({EnemiesFolder, CharactersFolder}) do
+                    for _, obj in ipairs(folder:GetChildren()) do
+                        if obj ~= Player.Character then
+                            local head = obj:FindFirstChild("Head")
+                            if head and IsAlive(obj) then
+                                local dist = (head.Position - root.Position).Magnitude
+                                if dist <= Settings.Distance then
+                                    table.insert(targets,{obj,head})
+                                    if #targets >= Settings.MaxTargets then break end
                                 end
                             end
                         end
                         if #targets >= Settings.MaxTargets then break end
                     end
+                    if #targets >= Settings.MaxTargets then break end
+                end
 
-                    if #targets > 0 then
-                        RegisterAttack:FireServer(0)
-                        RegisterHit:FireServer(targets[1][2], targets)
-                    end
+                if #targets > 0 then
+                    RegisterAttack:FireServer(0)
+                    RegisterHit:FireServer(targets[1][2], targets)
                 end
             end
-            task.wait(Settings.AttackInterval)
         end
-    end)
+        task.wait(Settings.AttackInterval)
+    end
+end)
 
     elseif index == 6 then
         local label = Instance.new("TextLabel")
