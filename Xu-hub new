@@ -375,4 +375,3 @@ UserInputService.InputChanged:Connect(function(input)
         update(input)
     end
 end)
-將每個內容區再增加一個功能 順便教我怎麼增加 
