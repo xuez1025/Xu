@@ -331,7 +331,7 @@ local function contentFunction(index)
     maxLabel.TextScaled = true
     maxLabel.Font = Enum.Font.SourceSans
     maxLabel.TextXAlignment = Enum.TextXAlignment.Left
-    maxLabel.Text = "(max:1000)"
+    maxLabel.Text = "(max:1000m)"
     maxLabel.Parent = distFrame
 
     -- ===== 滑桿 (置中於右側) =====
