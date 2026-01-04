@@ -132,7 +132,7 @@ end)
 -- ===== 側欄按鈕 =====
 local buttonNames = {
     "通用", "設定", "Server", "Status", "PVP", 
-    "Farm", "自動", "我太帥了", "天生可能就很帥了", "好像是"
+    "Farm", "自動", "未解鎖", "待開發", "待開發"
 }
 
 local buttons = {}
@@ -360,37 +360,13 @@ Players.PlayerAdded:Connect(setupPlayerESP)
 Players.PlayerRemoving:Connect(removeESP)
 
     elseif index == 2 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "設定"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 40
-        label.Parent = contentFrame
+
         
     elseif index == 3 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "server"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 40
-        label.Parent = contentFrame
+
 
     elseif index == 4 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "狀態"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 40
-        label.Parent = contentFrame
+
 
     elseif index == 5 then
 -- ===== PVP 自動攻擊與免控旋轉設定 =====
@@ -900,21 +876,13 @@ end
     end)
 
     elseif index == 7 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "自動"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 40
-        label.Parent = contentFrame
+
 
     elseif index == 8 then
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "待開發"
+        label.Text = "未解鎖"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
