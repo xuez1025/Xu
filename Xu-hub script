@@ -127,6 +127,7 @@ contentFrame.Position = UDim2.new(0,180,0,50)
 contentFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
 contentFrame.BackgroundTransparency = 0.8
 contentFrame.BorderSizePixel = 0
+contentFrame.ScrollBarThickness = 6
 contentFrame.Parent = mainFrame
 local contentCorner = Instance.new("UICorner")
 contentCorner.CornerRadius = UDim.new(0,10)
