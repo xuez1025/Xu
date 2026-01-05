@@ -9,6 +9,26 @@ local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
+-- ===== FastAttack 核心 =====
+local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
+local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
+local RegisterHit = Net:WaitForChild("RE/RegisterHit")
+local EnemiesFolder = workspace:WaitForChild("Enemies")
+local CharactersFolder = workspace:WaitForChild("Characters")
+
+_G.FastAttack = true
+local Settings = {
+    AutoClick = true,
+    Distance = 50,
+    AttackInterval = 0.01,
+    MaxTargets = 20
+}
+
+local function IsAlive(char)
+    local hum = char:FindFirstChild("Humanoid")
+    return hum and hum.Health > 0
+end
+
 -- ===== Xu-hub UI =====
 local screenGui = Instance.new("ScreenGui")
 screenGui.Parent = PlayerGui
@@ -162,202 +182,42 @@ for i=1,10 do
     buttons[i] = {Button = btn, Indicator = indicator}
 end
 
--- ===== 右側內容區功能函數 =====
-local function contentFunction(index)
+-- ===== 右側內容生成函數 =====
+local function createOptionRow(parent, yPos, labelText, contentFunc)
+    local rowFrame = Instance.new("Frame")
+    rowFrame.Size = UDim2.new(1,-20,0,50)
+    rowFrame.Position = UDim2.new(0,10,0,yPos)
+    rowFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    rowFrame.BorderSizePixel = 0
+    rowFrame.Parent = parent
+
+    local rowCorner = Instance.new("UICorner")
+    rowCorner.CornerRadius = UDim.new(0,10)
+    rowCorner.Parent = rowFrame
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0,120,1,0)
+    label.Position = UDim2.new(0,10,0,0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.TextScaled = true
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = rowFrame
+
+    contentFunc(rowFrame)
+    return rowFrame
+end
+
+-- ===== PVP 右側內容 =====
+local function showContent(index)
+    contentFrame:ClearAllChildren()
+    for i,b in ipairs(buttons) do
+        b.Indicator.Visible = (i==index)
+    end
+    
     if index == 1 then
--- ===== 通用分頁 =====
-local y = 10 -- 初始垂直位置
-local lineHeight = 60
-local lineSpacing = 10
 
--- ===== 創建功能行 =====
-local function createLine(parent, yPos, height)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1,-20,0,height)
-    frame.Position = UDim2.new(0,10,0,yPos)
-    frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
-    frame.BorderSizePixel = 0
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
-    frame.Parent = parent
-    return frame
-end
-
--- ===== ESP 設定 =====
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
-
-local ESP_ENABLED = false
-
--- 判斷顏色
-local function getESPColor(player)
-    local myTeam = LocalPlayer.Team
-    local playerTeam = player.Team
-    if myTeam and playerTeam then
-        if myTeam == playerTeam then
-            return Color3.fromRGB(0,255,0) -- 綠色：同隊
-        else
-            return Color3.fromRGB(255,0,0) -- 紅色：敵人
-        end
-    end
-    return Color3.fromRGB(255,255,255)
-end
-
--- 建立 / 移除 ESP
-local function createESP(player)
-    if not player.Character then return end
-    if player.Character:FindFirstChild("ESP_Highlight") then return end
-
-    local color = getESPColor(player)
-
-    -- Highlight
-    local h = Instance.new("Highlight")
-    h.Name = "ESP_Highlight"
-    h.FillColor = color
-    h.OutlineColor = Color3.fromRGB(255,255,255)
-    h.FillTransparency = 0.2
-    h.OutlineTransparency = 0
-    h.Adornee = player.Character
-    h.Parent = player.Character
-
-    -- BillboardGui
-    local head = player.Character:FindFirstChild("Head")
-    if not head then return end
-
-    local bill = Instance.new("BillboardGui")
-    bill.Name = "ESP_Billboard"
-    bill.Size = UDim2.fromOffset(180,50)
-    bill.StudsOffset = Vector3.new(0,3,0)
-    bill.AlwaysOnTop = true
-    bill.Parent = head
-
-    local text = Instance.new("TextLabel", bill)
-    text.Size = UDim2.fromOffset(180,50)
-    text.Position = UDim2.fromOffset(0,0)
-    text.BackgroundTransparency = 1
-    text.TextColor3 = color
-    text.TextStrokeTransparency = 0
-    text.TextTransparency = 0.2
-    text.Font = Enum.Font.SourceSansBold
-    text.TextSize = 20
-    text.Name = "Info"
-end
-
-local function removeESP(player)
-    if not player.Character then return end
-    local h = player.Character:FindFirstChild("ESP_Highlight")
-    if h then h:Destroy() end
-    local head = player.Character:FindFirstChild("Head")
-    if head then
-        local bill = head:FindFirstChild("ESP_Billboard")
-        if bill then bill:Destroy() end
-    end
-end
-
-local function refreshESP()
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            if ESP_ENABLED then
-                createESP(p)
-            else
-                removeESP(p)
-            end
-        end
-    end
-end
-
--- ===== ESP 開關行 =====
-local espFrame = createLine(contentFrame, y, lineHeight)
-
-local espLabel = Instance.new("TextLabel")
-espLabel.Size = UDim2.new(0,150,1,0)
-espLabel.Position = UDim2.new(0,10,0,0)
-espLabel.BackgroundTransparency = 1
-espLabel.Text = "ESP"
-espLabel.TextColor3 = Color3.fromRGB(255,255,255)
-espLabel.TextScaled = true
-espLabel.Font = Enum.Font.SourceSansBold
-espLabel.TextXAlignment = Enum.TextXAlignment.Left
-espLabel.Parent = espFrame
-
-local switchBG = Instance.new("Frame")
-switchBG.Size = UDim2.new(0,60,0,30)
-switchBG.Position = UDim2.new(1,-80,0,(lineHeight-30)/2)
-switchBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
-switchBG.BorderSizePixel = 0
-switchBG.Parent = espFrame
-Instance.new("UICorner", switchBG).CornerRadius = UDim.new(0,15)
-
-local switchKnob = Instance.new("Frame")
-switchKnob.Size = UDim2.new(0,28,0,28)
-switchKnob.Position = UDim2.new(0,1,0,1)
-switchKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-Instance.new("UICorner", switchKnob).CornerRadius = UDim.new(0,14)
-switchKnob.Parent = switchBG
-
--- Switch 點擊控制
-switchBG.InputBegan:Connect(function(input)
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-
-    ESP_ENABLED = not ESP_ENABLED
-
-    if ESP_ENABLED then
-        switchKnob:TweenPosition(UDim2.new(1,-29,0,1),"Out","Quad",0.2,true)
-        switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
-    else
-        switchKnob:TweenPosition(UDim2.new(0,1,0,1),"Out","Quad",0.2,true)
-        switchBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
-    end
-
-    refreshESP()
-end)
-
-y = y + lineHeight + lineSpacing
-
--- ===== ESP 更新 =====
-RunService.RenderStepped:Connect(function()
-    if ESP_ENABLED and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                local bill = p.Character.Head:FindFirstChild("ESP_Billboard")
-                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                if bill and hrp then
-                    local dist = (myPos - hrp.Position).Magnitude
-                    local info = bill:FindFirstChild("Info")
-                    if info then
-                        info.Text = p.Name .. " [" .. math.floor(dist) .. "m]"
-                        info.TextColor3 = getESPColor(p)
-                    end
-                    local highlight = p.Character:FindFirstChild("ESP_Highlight")
-                    if highlight then
-                        highlight.FillColor = getESPColor(p)
-                    end
-                end
-            end
-        end
-    end
-end)
-
--- ===== 玩家事件 =====
-local function setupPlayerESP(p)
-    p.CharacterAdded:Connect(function()
-        task.wait(0.2)
-        if ESP_ENABLED then createESP(p) end
-    end)
-    if ESP_ENABLED and p.Character then
-        createESP(p)
-    end
-end
-
-for _, p in ipairs(Players:GetPlayers()) do
-    if p ~= LocalPlayer then
-        setupPlayerESP(p)
-    end
-end
-
-Players.PlayerAdded:Connect(setupPlayerESP)
-Players.PlayerRemoving:Connect(removeESP)
 
     elseif index == 2 then
 
@@ -369,565 +229,155 @@ Players.PlayerRemoving:Connect(removeESP)
 
 
     elseif index == 5 then
--- ===== PVP 自動攻擊與免控旋轉設定 =====
-local Settings = {
-    AutoClick = true,      -- 初始自動攻擊 ON
-    Distance = 50,
-    AttackInterval = 0.01,
-    MaxTargets = 20
-}
+        local y = 10
 
--- 免控旋轉設定
-local SpinSettings = {
-    Enabled = false,
-    ROTATION_SPEED = 2000,
-    SLIDE_MAGNITUDE = 350,
-    JUMP_HEIGHT = 100
-}
+		    -- ===== 大標題 =====
+    local mainTitle = Instance.new("TextLabel")
+    mainTitle.Size = UDim2.new(1, -20, 0, 40)
+    mainTitle.Position = UDim2.new(0, 10, 0, y)
+    mainTitle.BackgroundTransparency = 1
+    mainTitle.Text = "PVP 自動攻擊與免控設定"
+    mainTitle.TextColor3 = Color3.fromRGB(50, 50, 50)
+    mainTitle.Font = Enum.Font.SourceSansBold
+    mainTitle.TextScaled = true
+    mainTitle.TextXAlignment = Enum.TextXAlignment.Left
+    mainTitle.Parent = contentFrame
 
-local rotating = false
-local rotationConn
-local currentYaw = 0
-local moveKeys = {W=false,A=false,S=false,D=false}
-local jumpHold = false
-
--- 初始 y
-local y = 10  
-local lineHeight = 60
-local lineSpacing = 10  -- 行間距
-
--- ===== 創建功能行 =====
-local function createLine(parent, yPos, height)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1,-20,0,height)
-    frame.Position = UDim2.new(0,10,0,yPos)
-    frame.BackgroundColor3 = Color3.fromRGB(80,80,80)
-    frame.BorderSizePixel = 0
-
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0,12)
-    corner.Parent = frame
-
-    frame.Parent = parent
-    return frame
-end
-
--- ===== 自動攻擊開關 =====
-local autoFrame = createLine(contentFrame, y, lineHeight)
-
-local labelAuto = Instance.new("TextLabel")
-labelAuto.Size = UDim2.new(0,150,1,0)
-labelAuto.Position = UDim2.new(0,10,0,0)
-labelAuto.BackgroundTransparency = 1
-labelAuto.Text = "自動攻擊"
-labelAuto.TextColor3 = Color3.fromRGB(255,255,255)
-labelAuto.TextScaled = true
-labelAuto.Font = Enum.Font.SourceSansBold
-labelAuto.TextXAlignment = Enum.TextXAlignment.Left
-labelAuto.Parent = autoFrame
-
-local switchBG = Instance.new("Frame")
-switchBG.Size = UDim2.new(0,60,0,30)
-switchBG.Position = UDim2.new(1,-80,0,(lineHeight-30)/2)
-switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
-switchBG.BorderSizePixel = 0
-switchBG.Parent = autoFrame
-
-local switchCorner = Instance.new("UICorner")
-switchCorner.CornerRadius = UDim.new(0,15)
-switchCorner.Parent = switchBG
-
-local knob = Instance.new("Frame")
-knob.Size = UDim2.new(0,28,0,28)
-knob.Position = UDim2.new(1,-29,0,1)
-knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-knob.BorderSizePixel = 0
-knob.Parent = switchBG
-
-local knobCorner = Instance.new("UICorner")
-knobCorner.CornerRadius = UDim.new(0,14)
-knobCorner.Parent = knob
-
-local function toggleAutoClick()
-    Settings.AutoClick = not Settings.AutoClick
-    if Settings.AutoClick then
-        knob:TweenPosition(UDim2.new(1,-29,0,1),"Out","Quad",0.2,true)
-        switchBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
-    else
-        knob:TweenPosition(UDim2.new(0,1,0,1),"Out","Quad",0.2,true)
-        switchBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
-    end
-end
-
-switchBG.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        toggleAutoClick()
-    end
+    -- 彩虹顏色效果
+local hue = 0
+RunService.RenderStepped:Connect(function(dt)
+    hue = (hue + dt/2) % 1 -- 速度可調整，越小越慢
+    mainTitle.TextColor3 = Color3.fromHSV(hue,1,1)
 end)
 
-y = y + lineHeight + lineSpacing  
+	y = y + 40 -- 下一個選項的 y 位置
 
--- ===== 攻擊距離滑桿 =====
-local distFrame = createLine(contentFrame, y, lineHeight)
+        -- 自動攻擊開關
+        createOptionRow(contentFrame, y, "自動攻擊:", function(row)
+            local switchBg = Instance.new("Frame")
+            switchBg.Size = UDim2.new(0,60,0.5,0)
+            switchBg.Position = UDim2.new(0,150,0.25,0)
+            switchBg.BackgroundColor3 = Settings.AutoClick and Color3.fromRGB(0,200,0) or Color3.fromRGB(100,100,100)
+            switchBg.BorderSizePixel = 0
+            switchBg.Parent = row
+            local switchCorner = Instance.new("UICorner")
+            switchCorner.CornerRadius = UDim.new(0,20)
+            switchCorner.Parent = switchBg
 
-local MAX_DISTANCE = 1000
-local sliderWidth = 200
+            local knob = Instance.new("Frame")
+            knob.Size = UDim2.new(0,28,1,0)
+            knob.Position = Settings.AutoClick and UDim2.new(1, -28, 0, 0) or UDim2.new(0,0,0,0)
+            knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            knob.BorderSizePixel = 0
+            knob.Parent = switchBg
+            local knobCorner = Instance.new("UICorner")
+            knobCorner.CornerRadius = UDim.new(0,20)
+            knobCorner.Parent = knob
 
-local distLabel = Instance.new("TextLabel")
-distLabel.Size = UDim2.new(0,150,1,0)
-distLabel.Position = UDim2.new(0,10,0,0)
-distLabel.BackgroundTransparency = 1
-distLabel.TextColor3 = Color3.fromRGB(255,255,255)
-distLabel.TextScaled = true
-distLabel.Font = Enum.Font.SourceSansBold
-distLabel.TextXAlignment = Enum.TextXAlignment.Left
-distLabel.Text = "攻擊距離: "..Settings.Distance.." 米 (max:"..MAX_DISTANCE.."m)"
-distLabel.Parent = distFrame
-
-local slider = Instance.new("Frame")
-slider.Size = UDim2.new(0, sliderWidth, 0, 20)
-slider.Position = UDim2.new(1, -sliderWidth - 20, 0, (lineHeight-20)/2)
-slider.BackgroundColor3 = Color3.fromRGB(50,50,50)
-slider.BorderSizePixel = 0
-slider.Parent = distFrame
-
-local fill = Instance.new("Frame")
-fill.Size = UDim2.new(Settings.Distance/MAX_DISTANCE,0,1,0)
-fill.BackgroundColor3 = Color3.fromRGB(255,200,0)
-fill.BorderSizePixel = 0
-fill.Parent = slider
-
-local knobSlider = Instance.new("Frame")
-knobSlider.Size = UDim2.new(0,20,0,20)
-knobSlider.Position = UDim2.new(Settings.Distance/MAX_DISTANCE,-10,0,0)
-knobSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
-knobSlider.BorderSizePixel = 0
-knobSlider.Parent = slider
-
-local knobCorner = Instance.new("UICorner")
-knobCorner.CornerRadius = UDim.new(1,0)
-knobCorner.Parent = knobSlider
-
-local dragging = false
-slider.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-    end
-end)
-slider.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-slider.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local mouseX = input.Position.X - slider.AbsolutePosition.X
-        mouseX = math.clamp(mouseX,0,slider.AbsoluteSize.X)
-        local distance = (mouseX/slider.AbsoluteSize.X) * MAX_DISTANCE
-        Settings.Distance = distance
-        distLabel.Text = "距離: "..math.floor(distance).." 米 (max:"..MAX_DISTANCE.."m)"
-        fill.Size = UDim2.new(mouseX/slider.AbsoluteSize.X,0,1,0)
-        knobSlider.Position = UDim2.new(mouseX/slider.AbsoluteSize.X,-10,0,0)
-    end
-end)
-
-y = y + lineHeight + lineSpacing  
-
--- ===== 免控旋轉 Switch =====
-local spinFrame = createLine(contentFrame, y, lineHeight)
-
-local spinLabel = Instance.new("TextLabel")
-spinLabel.Size = UDim2.new(0,200,1,0)
-spinLabel.Position = UDim2.new(0,10,0,0)
-spinLabel.BackgroundTransparency = 1
-spinLabel.Text = "免控"
-spinLabel.TextColor3 = Color3.fromRGB(255,255,255)
-spinLabel.TextScaled = true
-spinLabel.Font = Enum.Font.SourceSansBold
-spinLabel.TextXAlignment = Enum.TextXAlignment.Left
-spinLabel.Parent = spinFrame
-
-local spinBG = Instance.new("Frame")
-spinBG.Size = UDim2.new(0,60,0,30)
-spinBG.Position = UDim2.new(1,-80,0,(lineHeight-30)/2)
-spinBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
-spinBG.BorderSizePixel = 0
-spinBG.Parent = spinFrame
-Instance.new("UICorner", spinBG).CornerRadius = UDim.new(0,15)
-
-local spinKnob = Instance.new("Frame")
-spinKnob.Size = UDim2.new(0,28,0,28)
-spinKnob.Position = UDim2.new(0,1,0,1)
-spinKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-spinKnob.Parent = spinBG
-Instance.new("UICorner", spinKnob).CornerRadius = UDim.new(0,14)
-
--- ===== WASD + Jump 監聽 =====
-UserInputService.InputBegan:Connect(function(input,gpe)
-    if gpe then return end
-    if input.KeyCode==Enum.KeyCode.W then moveKeys.W=true end
-    if input.KeyCode==Enum.KeyCode.A then moveKeys.A=true end
-    if input.KeyCode==Enum.KeyCode.S then moveKeys.S=true end
-    if input.KeyCode==Enum.KeyCode.D then moveKeys.D=true end
-    if input.KeyCode==Enum.KeyCode.Space then jumpHold=true end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode==Enum.KeyCode.W then moveKeys.W=false end
-    if input.KeyCode==Enum.KeyCode.A then moveKeys.A=false end
-    if input.KeyCode==Enum.KeyCode.S then moveKeys.S=false end
-    if input.KeyCode==Enum.KeyCode.D then moveKeys.D=false end
-    if input.KeyCode==Enum.KeyCode.Space then jumpHold=false end
-end)
-
--- ===== 免控旋轉邏輯 =====
-local function startSpin()
-    if rotating then return end
-    rotating = true
-
-    rotationConn = RunService.RenderStepped:Connect(function(dt)
-        if not SpinSettings.Enabled then
-            rotationConn:Disconnect()
-            rotating = false
-            return
-        end
-
-        local char = player.Character
-        if not char then return end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-
-        currentYaw += SpinSettings.ROTATION_SPEED * dt
-
-        local cam = Workspace.CurrentCamera
-        local camLook = Vector3.new(cam.CFrame.LookVector.X,0,cam.CFrame.LookVector.Z)
-        local camRight = Vector3.new(cam.CFrame.RightVector.X,0,cam.CFrame.RightVector.Z)
-
-        local dir = Vector3.zero
-        if moveKeys.W then dir += camLook end
-        if moveKeys.S then dir -= camLook end
-        if moveKeys.A then dir -= camRight end
-        if moveKeys.D then dir += camRight end
-        if dir.Magnitude > 0 then dir = dir.Unit end
-
-        local delta = dir * SpinSettings.SLIDE_MAGNITUDE * dt
-        if jumpHold then
-            delta += Vector3.new(0, SpinSettings.JUMP_HEIGHT * dt, 0)
-        end
-
-        root.CFrame =
-            CFrame.new(root.Position + delta) *
-            CFrame.Angles(0, math.rad(currentYaw), 0)
-    end)
-end
-
--- ===== Switch 點擊控制 =====
-spinBG.InputBegan:Connect(function(input)
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-
-    SpinSettings.Enabled = not SpinSettings.Enabled
-
-    if SpinSettings.Enabled then
-        spinKnob:TweenPosition(UDim2.new(1,-29,0,1),"Out","Quad",0.2,true)
-        spinBG.BackgroundColor3 = Color3.fromRGB(0,200,0)
-        startSpin()
-    else
-        spinKnob:TweenPosition(UDim2.new(0,1,0,1),"Out","Quad",0.2,true)
-        spinBG.BackgroundColor3 = Color3.fromRGB(100,100,100)
-    end
-end)
-
--- ===== 核心自動攻擊邏輯 =====
-task.spawn(function()
-    local Players = game:GetService("Players")
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Player = Players.LocalPlayer
-    local Net = ReplicatedStorage:WaitForChild("Modules"):WaitForChild("Net")
-    local RegisterAttack = Net:WaitForChild("RE/RegisterAttack")
-    local RegisterHit = Net:WaitForChild("RE/RegisterHit")
-    local EnemiesFolder = workspace:WaitForChild("Enemies")
-    local CharactersFolder = workspace:WaitForChild("Characters")
-
-    local function IsAlive(char)
-        local hum = char:FindFirstChild("Humanoid")
-        return hum and hum.Health > 0
-    end
-
-    while true do
-        if Settings.AutoClick then
-            local root = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                local targets = {}
-                for _, folder in ipairs({EnemiesFolder, CharactersFolder}) do
-                    for _, obj in ipairs(folder:GetChildren()) do
-                        if obj ~= Player.Character then
-                            local head = obj:FindFirstChild("Head")
-                            if head and IsAlive(obj) then
-                                local dist = (head.Position - root.Position).Magnitude
-                                if dist <= Settings.Distance then
-                                    table.insert(targets,{obj,head})
-                                    if #targets >= Settings.MaxTargets then break end
-                                end
-                            end
-                        end
-                        if #targets >= Settings.MaxTargets then break end
-                    end
-                    if #targets >= Settings.MaxTargets then break end
-                end
-
-                if #targets > 0 then
-                    RegisterAttack:FireServer(0)
-                    RegisterHit:FireServer(targets[1][2], targets)
+            local toggled = Settings.AutoClick
+            local function toggleSwitch()
+                toggled = not toggled
+                Settings.AutoClick = toggled
+                if toggled then
+                    knob:TweenPosition(UDim2.new(1,-28,0,0),"Out","Quad",0.2,true)
+                    switchBg.BackgroundColor3 = Color3.fromRGB(0,200,0)
+                else
+                    knob:TweenPosition(UDim2.new(0,0,0,0),"Out","Quad",0.2,true)
+                    switchBg.BackgroundColor3 = Color3.fromRGB(100,100,100)
                 end
             end
-        end
-        task.wait(Settings.AttackInterval)
-    end
-end)
+            switchBg.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then toggleSwitch() end
+            end)
+        end)
+        y = y + 60
+
+        -- 攻擊距離滑條
+        createOptionRow(contentFrame, y, "攻擊距離:", function(row)
+            local inputBox = Instance.new("TextBox")
+            inputBox.Size = UDim2.new(0,80,0.6,0)
+            inputBox.Position = UDim2.new(0,130,0.2,0)
+            inputBox.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            inputBox.TextColor3 = Color3.fromRGB(255,255,255)
+            inputBox.TextScaled = true
+            inputBox.ClearTextOnFocus = false
+            inputBox.Text = tostring(Settings.Distance)
+            inputBox.Parent = row
+
+            local slider = Instance.new("Frame")
+            slider.Size = UDim2.new(0,200,0.3,0)
+            slider.Position = UDim2.new(0,220,0.35,0)
+            slider.BackgroundColor3 = Color3.fromRGB(100,100,100)
+            slider.Parent = row
+            local fill = Instance.new("Frame")
+            fill.Size = UDim2.new(Settings.Distance/1000,0,1,0)
+            fill.BackgroundColor3 = Color3.fromRGB(255,200,0)
+            fill.Parent = slider
+
+            local maxLabel = Instance.new("TextLabel")
+            maxLabel.Size = UDim2.new(0,80,1,0)
+            maxLabel.Position = UDim2.new(0,430,0,0)
+            maxLabel.BackgroundTransparency = 1
+            maxLabel.Text = "(max:1000m)"
+            maxLabel.TextColor3 = Color3.fromRGB(200,200,200)
+            maxLabel.TextScaled = true
+            maxLabel.TextXAlignment = Enum.TextXAlignment.Left
+            maxLabel.Parent = row
+
+            local dragging = false
+            local MAX_DISTANCE = 1000
+
+            slider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+            end)
+            slider.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+            end)
+            slider.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    local mouseX = input.Position.X - slider.AbsolutePosition.X
+                    mouseX = math.clamp(mouseX,0,slider.AbsoluteSize.X)
+                    local distance = (mouseX/slider.AbsoluteSize.X)*MAX_DISTANCE
+                    Settings.Distance = distance
+                    inputBox.Text = tostring(math.floor(distance))
+                    fill.Size = UDim2.new(mouseX/slider.AbsoluteSize.X,0,1,0)
+                end
+            end)
+            inputBox.FocusLost:Connect(function(enterPressed)
+                if enterPressed then
+                    local val = tonumber(inputBox.Text)
+                    if val then
+                        local distance = math.clamp(val,0,MAX_DISTANCE)
+                        Settings.Distance = distance
+                        inputBox.Text = tostring(math.floor(distance))
+                        fill.Size = UDim2.new(distance/MAX_DISTANCE,0,1,0)
+                    else
+                        inputBox.Text = tostring(math.floor(Settings.Distance))
+                    end
+                end
+            end)
+        end)
+        y = y + 60
 
     elseif index == 6 then
-local flyEnabled = false
-local flyConnection
-local hoverHeight = 10
-local rangeValue = 500
-local baseSpeed = 0.1
-local targetNPC
 
--- ===== 工具函式：建立行容器 =====
-local function createLine(parent, yOffset, height)
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1, -20, 0, height)
-    frame.Position = UDim2.new(0, 10, 0, yOffset)
-    frame.BackgroundTransparency = 1
-    frame.Parent = parent
-    return frame
-end
-
--- ===== Farm 分頁整合飛行功能 =====
-    local y = 10
-    local lineHeight = 90
-    local lineSpacing = 10
-
-    local function createLine(parent, yPos, height)
-        local frame = Instance.new("Frame")
-        frame.Size = UDim2.new(1, -20, 0, height)
-        frame.Position = UDim2.new(0, 10, 0, yPos)
-        frame.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
-        frame.BorderSizePixel = 0
-        local corner = Instance.new("UICorner", frame)
-        corner.CornerRadius = UDim.new(0, 12)
-        frame.Parent = parent
-        return frame
-    end
-
-    local labelTitle = Instance.new("TextLabel")
-    labelTitle.Size = UDim2.new(1, 0, 0, 50)
-    labelTitle.Position = UDim2.new(0, 0, 0, 0)
-    labelTitle.Text = "飛行到 NPC"
-    labelTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-    labelTitle.BackgroundTransparency = 1
-    labelTitle.Font = Enum.Font.SourceSansBold
-    labelTitle.TextSize = 40
-    labelTitle.TextXAlignment = Enum.TextXAlignment.Left
-    labelTitle.Parent = contentFrame
-
-    y = y + 50 + 10
-
-    -- 飛行開關
-    local flyFrame = createLine(contentFrame, y, lineHeight)
-    local toggleButton = Instance.new("TextButton")
-    toggleButton.Size = UDim2.new(0, 200, 0, 40)
-    toggleButton.Position = UDim2.new(0, 10, 0, 10)
-    toggleButton.Text = "飛行: OFF"
-    toggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    toggleButton.Font = Enum.Font.SourceSansBold
-    toggleButton.TextScaled = true
-    toggleButton.Parent = flyFrame
-    Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0, 8)
-
-    y = y + lineHeight + lineSpacing
-
-    -- 飛行高度與範圍滑桿設置
-    local SLIDER_LENGTH = 240
-    local SLIDER_HEIGHT = 20
-    local HANDLE_SIZE = 20
-    local MAX_HEIGHT = 50
-    local MAX_RANGE = 2000
-    local hoverHeight = 10
-    local rangeValue = 500
-    local draggingSlider = false
-
-    local function createSlider(parent, yPos, titleText, maxValue, initialValue, color)
-        local frame = createLine(parent, yPos, 50)
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(0, 240, 0, 25)
-        label.Position = UDim2.new(0, 10, 0, 5)
-        label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        label.BackgroundTransparency = 1
-        label.TextScaled = true
-        label.Font = Enum.Font.SourceSansBold
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.Parent = frame
-        local sliderLabel = titleText..": "..initialValue
-        label.Text = sliderLabel
-
-        local slider = Instance.new("Frame")
-        slider.Size = UDim2.new(0, SLIDER_LENGTH, 0, SLIDER_HEIGHT)
-        slider.Position = UDim2.new(0, 10, 0, 25)
-        slider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-        slider.Parent = frame
-        Instance.new("UICorner", slider).CornerRadius = UDim.new(0, 10)
-
-        local handle = Instance.new("Frame")
-        handle.Size = UDim2.new(0, HANDLE_SIZE, 1, 0)
-        handle.Position = UDim2.new(initialValue/maxValue, -HANDLE_SIZE/2, 0, 0)
-        handle.BackgroundColor3 = color
-        handle.Parent = slider
-        Instance.new("UICorner", handle).CornerRadius = UDim.new(0, 10)
-
-        local dragging = false
-        handle.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = true
-                draggingSlider = true
-            end
-        end)
-        handle.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                dragging = false
-                draggingSlider = false
-            end
-        end)
-
-        local function update(input)
-            if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                local mouseX = input.Position.X
-                local basePos = slider.AbsolutePosition.X
-                local baseSize = slider.AbsoluteSize.X
-                local relativePos = math.clamp(mouseX - basePos, 0, baseSize)
-                handle.Position = UDim2.new(0, relativePos - HANDLE_SIZE/2, 0, 0)
-                local value = math.floor((relativePos / baseSize) * maxValue)
-                if titleText == "飛行高度" then
-                    hoverHeight = value
-                else
-                    rangeValue = value
-                end
-                label.Text = titleText..": "..value
-            end
-        end
-
-        handle.InputChanged:Connect(update)
-        slider.InputChanged:Connect(update)
-    end
-
-    createSlider(contentFrame, y, "飛行高度", MAX_HEIGHT, hoverHeight, Color3.fromRGB(255, 50, 50))
-    y = y + 50 + 10
-    createSlider(contentFrame, y, "範圍", MAX_RANGE, rangeValue, Color3.fromRGB(0, 255, 0))
-
-    -- 飛行邏輯
-    local isFlying = false
-    local flyConnection
-    local player = game:GetService("Players").LocalPlayer
-
-    local function stopFlying()
-        if flyConnection then
-            flyConnection:Disconnect()
-            flyConnection = nil
-        end
-        isFlying = false
-        toggleButton.Text = "飛行: OFF"
-        toggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    end
-
-    toggleButton.MouseButton1Click:Connect(function()
-        isFlying = not isFlying
-        if isFlying then
-            toggleButton.Text = "飛行: ON"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-            if not flyConnection then
-                flyConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                    local character = player.Character or player.CharacterAdded:Wait()
-                    local hrp = character:WaitForChild("HumanoidRootPart")
-                    local enemiesFolder = workspace:FindFirstChild("Enemies")
-                    local nearest = nil
-                    local minDist = math.huge
-                    if enemiesFolder then
-                        for _, npc in pairs(enemiesFolder:GetChildren()) do
-                            if npc:FindFirstChild("Humanoid") and npc.Humanoid.Health > 0 then
-                                local npcPos = npc:FindFirstChild("Head") and npc.Head.Position or npc.HumanoidRootPart.Position
-                                local dist = (npcPos - hrp.Position).Magnitude
-                                if dist < minDist and dist <= rangeValue then
-                                    minDist = dist
-                                    nearest = npc
-                                end
-                            end
-                        end
-                    end
-                    if nearest then
-                        local targetPos = nearest:FindFirstChild("Head") and nearest.Head.Position or nearest.HumanoidRootPart.Position
-                        targetPos = targetPos + Vector3.new(0, hoverHeight, 0)
-                        hrp.CFrame = CFrame.new(hrp.Position:Lerp(targetPos, 0.1))
-                    end
-                end)
-            end
-        else
-            stopFlying()
-        end
-    end)
 
     elseif index == 7 then
 
 
     elseif index == 8 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "未解鎖"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 80
-        label.Parent = contentFrame
+
 
     elseif index == 9 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "待開發"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 80
-        label.Parent = contentFrame
+
 
     elseif index == 10 then
-        local label = Instance.new("TextLabel")
-        label.Size = UDim2.new(1,0,0,50)
-        label.Position = UDim2.new(0,0,0,0)
-        label.Text = "待開發"
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 80
-        label.Parent = contentFrame
+
     end
 end
 
 -- ===== 點擊側欄按鈕顯示內容（內容區完全空白） =====
-local function showContent(index)
-    -- 側欄指示條
-    for i, b in ipairs(buttons) do
-        b.Indicator.Visible = (i == index)
-    end
-
-    -- 清空右側內容區
-    contentFrame:ClearAllChildren()
-
-    -- 呼叫對應功能結構
-    contentFunction(index)
-end
-
-for i, b in ipairs(buttons) do
+for i,b in ipairs(buttons) do
     b.Button.MouseButton1Click:Connect(function()
         showContent(i)
     end)
@@ -977,5 +427,46 @@ end)
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         update(input)
+    end
+end)
+
+-- ===== FastAttack 核心執行 =====
+task.spawn(function()
+    while _G.FastAttack do
+        if Settings.AutoClick then
+            local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+            if root then
+                local targets = {}
+                for _, folder in ipairs({EnemiesFolder, CharactersFolder}) do
+                    for _, obj in ipairs(folder:GetChildren()) do
+                        if obj ~= player.Character then
+                            local head = obj:FindFirstChild("Head")
+                            if head and IsAlive(obj) then
+                                local dist = (head.Position - root.Position).Magnitude
+                                if dist <= Settings.Distance then
+                                    table.insert(targets,{obj,head})
+                                    if #targets >= Settings.MaxTargets then break end
+                                end
+                            end
+                        end
+                        if #targets >= Settings.MaxTargets then break end
+                    end
+                    if #targets >= Settings.MaxTargets then break end
+                end
+
+                local aliveTargets = {}
+                for _, t in ipairs(targets) do
+                    if IsAlive(t[1]) then
+                        table.insert(aliveTargets, t)
+                    end
+                end
+
+                if #aliveTargets > 0 then
+                    RegisterAttack:FireServer(0)
+                    RegisterHit:FireServer(aliveTargets[1][2], aliveTargets)
+                end
+            end
+        end
+        task.wait(Settings.AttackInterval)
     end
 end)
