@@ -5,64 +5,69 @@ local LocalPlayer = Players.LocalPlayer
 
 -- ================= State =================
 local ESP_ENABLED = false
-
--- ================= 判斷顏色函數 =================
-local function getESPColor(player)
-    local myTeam = LocalPlayer.Team
-    local playerTeam = player.Team
-
-    if myTeam and playerTeam then
-        if myTeam == playerTeam then
-            return Color3.fromRGB(0, 255, 0) -- 綠色：同陣營
-        else
-            return Color3.fromRGB(255, 0, 0) -- 紅色：敵人
-        end
-    end
-
-    return Color3.fromRGB(255, 255, 255) -- 無陣營或無法判斷
-end
+local ESP_COLOR = Color3.fromRGB(30,30,30) -- Highlight 顏色
+local TEXT_COLOR = Color3.fromRGB(255,255,255) -- 文字白色
 
 -- ================= ESP 建立/移除 =================
 local function createESP(player)
+    if player == LocalPlayer then return end -- 排除自己
     if not player.Character then return end
     if player.Character:FindFirstChild("ESP_Highlight") then return end
 
-    local color = getESPColor(player)
-
-    -- Highlight（角色模型更顯眼）
+    -- Highlight
     local h = Instance.new("Highlight")
     h.Name = "ESP_Highlight"
-    h.FillColor = color
+    h.FillColor = ESP_COLOR
     h.OutlineColor = Color3.fromRGB(255,255,255)
-    h.FillTransparency = 0.2 -- 更低透明度，模型顏色更明顯
-    h.OutlineTransparency = 0 -- 輪廓完全可見
+    h.FillTransparency = 0.2
+    h.OutlineTransparency = 0
     h.Adornee = player.Character
     h.Parent = player.Character
 
-    -- BillboardGui 文字
     local head = player.Character:FindFirstChild("Head")
     if not head then return end
 
+    -- BillboardGui 文字
     local bill = Instance.new("BillboardGui")
     bill.Name = "ESP_Billboard"
-    bill.Size = UDim2.fromOffset(180,50)
-    bill.StudsOffset = Vector3.new(0, 3, 0) -- 文字高於頭頂
+    bill.Size = UDim2.fromOffset(180,60)
+    bill.StudsOffset = Vector3.new(0, 3, 0)
     bill.AlwaysOnTop = true
     bill.Parent = head
 
+    -- 文字
     local text = Instance.new("TextLabel", bill)
+    text.Name = "Info"
     text.Size = UDim2.fromOffset(180,50)
-    text.Position = UDim2.fromOffset(0,0)
+    text.Position = UDim2.new(0,0,0,0)
     text.BackgroundTransparency = 1
-    text.TextColor3 = color
+    text.TextColor3 = TEXT_COLOR
     text.TextStrokeTransparency = 0
-    text.TextTransparency = 0.2 -- 文字稍微透明
     text.Font = Enum.Font.SourceSansBold
     text.TextSize = 20
-    text.Name = "Info"
+    text.TextWrapped = true
+    text.TextYAlignment = Enum.TextYAlignment.Top
+    text.Text = player.Name
+
+    -- 血條背景
+    local barBG = Instance.new("Frame", bill)
+    barBG.Name = "HP_Background"
+    barBG.Size = UDim2.new(0.8,0,0.08,0)
+    barBG.Position = UDim2.new(0.1,0,0.7,0)
+    barBG.BackgroundColor3 = Color3.fromRGB(50,50,50)
+    barBG.BorderSizePixel = 0
+
+    -- 血條前景
+    local barFG = Instance.new("Frame", barBG)
+    barFG.Name = "HP_Fill"
+    barFG.Size = UDim2.new(1,0,1,0)
+    barFG.Position = UDim2.new(0,0,0,0)
+    barFG.BackgroundColor3 = Color3.fromRGB(0,255,0)
+    barFG.BorderSizePixel = 0
 end
 
 local function removeESP(player)
+    if player == LocalPlayer then return end -- 排除自己
     if not player.Character then return end
     local h = player.Character:FindFirstChild("ESP_Highlight")
     if h then h:Destroy() end
@@ -73,13 +78,38 @@ local function removeESP(player)
     end
 end
 
-local function refreshESP()
+-- ================= 更新 ESP 文字 + 血條 =================
+local function updateESP()
+    if not ESP_ENABLED or not LocalPlayer.Character then return end
+    local myHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myHRP then return end
+
     for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer then
-            if ESP_ENABLED then
-                createESP(p)
-            else
-                removeESP(p)
+        if p ~= LocalPlayer and p.Character then
+            local humanoid = p.Character:FindFirstChildOfClass("Humanoid")
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            local head = p.Character:FindFirstChild("Head")
+            if humanoid and hrp and head then
+                local bill = head:FindFirstChild("ESP_Billboard")
+                if bill then
+                    local info = bill:FindFirstChild("Info")
+                    local barFG = bill:FindFirstChild("HP_Background") and bill.HP_Background:FindFirstChild("HP_Fill")
+                    if info then
+                        local dist = math.floor((myHRP.Position - hrp.Position).Magnitude)
+                        info.Text = string.format("%s [%dHP]\n距離: %dm", p.Name, math.floor(humanoid.Health), dist)
+                    end
+                    if barFG then
+                        local healthRatio = math.clamp(humanoid.Health / humanoid.MaxHealth,0,1)
+                        if healthRatio > 0.6 then
+                            barFG.BackgroundColor3 = Color3.fromRGB(0,255,0)
+                        elseif healthRatio > 0.3 then
+                            barFG.BackgroundColor3 = Color3.fromRGB(255,255,0)
+                        else
+                            barFG.BackgroundColor3 = Color3.fromRGB(255,0,0)
+                        end
+                        barFG.Size = UDim2.new(healthRatio,0,1,0)
+                    end
+                end
             end
         end
     end
@@ -109,12 +139,12 @@ local function createButton(text,posY)
 end
 
 local espBtn = createButton("ESP : OFF",10)
-
--- ================= UI Logic =================
 espBtn.MouseButton1Click:Connect(function()
     ESP_ENABLED = not ESP_ENABLED
     espBtn.Text = "ESP : " .. (ESP_ENABLED and "ON" or "OFF")
-    refreshESP()
+    for _, p in ipairs(Players:GetPlayers()) do
+        if ESP_ENABLED then createESP(p) else removeESP(p) end
+    end
 end)
 
 -- ================= UI Drag =================
@@ -138,9 +168,7 @@ frame.InputChanged:Connect(function(input)
     end
 end)
 
--- ================= Update =================
 RunService.RenderStepped:Connect(function()
-    -- 拖動 UI
     if dragging and dragInput then
         local delta = dragInput.Position - dragStart
         frame.Position = UDim2.new(
@@ -148,60 +176,31 @@ RunService.RenderStepped:Connect(function()
             startPos.Y.Scale, startPos.Y.Offset + delta.Y
         )
     end
-
-    if ESP_ENABLED and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local myPos = LocalPlayer.Character.HumanoidRootPart.Position
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("Head") then
-                local bill = p.Character.Head:FindFirstChild("ESP_Billboard")
-                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                if bill and hrp then
-                    local dist = (myPos - hrp.Position).Magnitude
-
-                    -- 更新文字與顏色
-                    local info = bill:FindFirstChild("Info")
-                    if info then
-                        info.Text = p.Name .. " [" .. math.floor(dist) .. "m]"
-                        info.TextColor3 = getESPColor(p)
-                    end
-
-                    -- 更新 Highlight 顏色
-                    local highlight = p.Character:FindFirstChild("ESP_Highlight")
-                    if highlight then
-                        highlight.FillColor = getESPColor(p)
-                    end
-                end
-            end
-        end
-    end
+    updateESP()
 end)
 
 -- ================= Player Events =================
 local function setupPlayerESP(p)
-    -- 玩家角色生成時
+    if p == LocalPlayer then return end -- 排除自己
     p.CharacterAdded:Connect(function()
         task.wait(0.2)
         if ESP_ENABLED then createESP(p) end
     end)
-    -- 如果角色已存在，立即新增 ESP
     if ESP_ENABLED and p.Character then
         createESP(p)
     end
 end
 
--- 現有玩家
 for _, p in ipairs(Players:GetPlayers()) do
     if p ~= LocalPlayer then
         setupPlayerESP(p)
     end
 end
 
--- 新加入玩家
 Players.PlayerAdded:Connect(function(p)
     setupPlayerESP(p)
 end)
 
--- 玩家離開
 Players.PlayerRemoving:Connect(function(p)
     removeESP(p)
 end)
