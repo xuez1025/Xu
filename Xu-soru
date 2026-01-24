@@ -1,18 +1,18 @@
--- ===== Services =====
-local Players = game:GetService("Players")
+
+local Players = game:GetService("Players") 
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- ===== States =====
+
 local selectedPlayer = nil
 local guiEnabled = true
 local playerButtons = {}
 local isMinimized = false
 
--- ===== GUI =====
+
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "TeleportGUI"
 ScreenGui.ResetOnSpawn = false
@@ -26,7 +26,6 @@ MainFrame.Active = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame)
 
--- ===== Drag =====
 do
 	local dragging, dragStart, startPos
 	MainFrame.InputBegan:Connect(function(inp)
@@ -52,7 +51,6 @@ do
 	end)
 end
 
--- ===== Title =====
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1,-120,0,40)
 Title.Position = UDim2.new(0,10,0,10)
@@ -63,7 +61,7 @@ Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 20
 Title.Parent = MainFrame
 
--- ===== Buttons =====
+
 local CloseButton = Instance.new("TextButton")
 CloseButton.Size = UDim2.new(0,40,0,30)
 CloseButton.Position = UDim2.new(1,-50,0,15)
@@ -86,7 +84,7 @@ MinimizeButton.BackgroundColor3 = Color3.fromRGB(100,100,100)
 MinimizeButton.Parent = MainFrame
 Instance.new("UICorner", MinimizeButton)
 
--- ===== Player List =====
+
 local ScrollingFrame = Instance.new("ScrollingFrame")
 ScrollingFrame.Size = UDim2.new(1,-20,1,-130)
 ScrollingFrame.Position = UDim2.new(0,10,0,60)
@@ -97,7 +95,6 @@ local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.Padding = UDim.new(0,6)
 UIListLayout.Parent = ScrollingFrame
 
--- ===== Teleport Button =====
 local TeleportButton = Instance.new("TextButton")
 TeleportButton.Size = UDim2.new(1,-20,0,40)
 TeleportButton.Position = UDim2.new(0,10,1,-50)
@@ -109,7 +106,7 @@ TeleportButton.BackgroundColor3 = Color3.fromRGB(70,140,220)
 TeleportButton.Parent = MainFrame
 Instance.new("UICorner", TeleportButton)
 
--- ===== Refresh Player List =====
+
 local function refreshPlayers()
 	for _, b in pairs(playerButtons) do b:Destroy() end
 	playerButtons = {}
@@ -146,7 +143,7 @@ local function refreshPlayers()
 		UDim2.new(0,0,0,UIListLayout.AbsoluteContentSize.Y + 10)
 end
 
--- ===== Teleport Logic（水平順移、貼近玩家）=====
+
 local function teleportToPlayer()
 	if not guiEnabled or not selectedPlayer then return end
 
@@ -160,7 +157,7 @@ local function teleportToPlayer()
 
 	local distance = 8
 
-	-- 只取 Camera 水平方向
+
 	local flatDir = Vector3.new(
 		Camera.CFrame.LookVector.X,
 		0,
@@ -169,24 +166,23 @@ local function teleportToPlayer()
 	if flatDir.Magnitude < 0.01 then return end
 	flatDir = flatDir.Unit
 
-	-- 高度貼近玩家，避免出現自己比玩家高而飄到頭上
+
 	local playerHRP_Y = targetHRP.Position.Y
 
-	-- 可選加一個微調，讓自己站在玩家旁邊的地面高度
+
 	local finalPos = Vector3.new(
 		targetHRP.Position.X,
-		playerHRP_Y,       -- 貼近玩家水平面
+		playerHRP_Y,      
 		targetHRP.Position.Z
 	) - flatDir * distance
 
-	-- 朝向：水平看前方
+
 	myHRP.CFrame = CFrame.new(
 		finalPos,
 		finalPos + flatDir
 	)
 end
 
--- ===== Connections =====
 TeleportButton.MouseButton1Click:Connect(teleportToPlayer)
 
 UserInputService.InputBegan:Connect(function(input, gp)
