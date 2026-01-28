@@ -1,0 +1,220 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local FlyEnabled = false
+local TargetPlayer = nil
+local CurrentTween = nil
+local NoclipEnabled = false
+
+local FlyBV, FlyBG
+
+function topos(Pos)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local Distance = (Pos.Position - hrp.Position).Magnitude
+    local Speed
+
+    if Distance < 25 then
+        Speed = 10000
+    elseif Distance < 50 then
+        Speed = 2000
+    elseif Distance < 150 then
+        Speed = 800
+    elseif Distance < 250 then
+        Speed = 600
+    elseif Distance < 500 then
+        Speed = 400
+    elseif Distance < 750 then
+        Speed = 350
+    else
+        Speed = 300
+    end
+
+    if CurrentTween then
+        CurrentTween:Cancel()
+    end
+
+    CurrentTween = TweenService:Create(
+        hrp,
+        TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear),
+        {CFrame = Pos}
+    )
+
+    CurrentTween:Play()
+end
+
+function StopTween()
+    if CurrentTween then
+        CurrentTween:Cancel()
+        CurrentTween = nil
+    end
+end
+
+function EnableFly()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local hrp = char:WaitForChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+
+    if FlyBV then return end
+
+    FlyBV = Instance.new("BodyVelocity")
+    FlyBV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+    FlyBV.Velocity = Vector3.zero
+    FlyBV.Parent = hrp
+
+    FlyBG = Instance.new("BodyGyro")
+    FlyBG.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    FlyBG.P = 50000
+    FlyBG.CFrame = hrp.CFrame
+    FlyBG.Parent = hrp
+
+    if hum then
+        hum:ChangeState(Enum.HumanoidStateType.Physics)
+    end
+end
+
+function DisableFly()
+    local char = LocalPlayer.Character
+    if not char then return end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+
+    if FlyBV then FlyBV:Destroy() FlyBV = nil end
+    if FlyBG then FlyBG:Destroy() FlyBG = nil end
+
+    if hum then
+        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+    end
+end
+
+RunService.Stepped:Connect(function()
+    if NoclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _,part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer.PlayerGui)
+ScreenGui.Name = "FlyGUI"
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0,260,0,360)
+Main.Position = UDim2.new(0,20,0.5,-180)
+Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
+Main.BorderSizePixel = 0
+Instance.new("UICorner", Main)
+
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,0,0,40)
+Title.BackgroundTransparency = 1
+Title.Text = "Fly To Player"
+Title.TextColor3 = Color3.new(1,1,1)
+Title.Font = Enum.Font.SourceSansBold
+Title.TextSize = 20
+
+local Toggle = Instance.new("TextButton", Main)
+Toggle.Position = UDim2.new(0,10,0,50)
+Toggle.Size = UDim2.new(1,-20,0,40)
+Toggle.Text = "START FLY"
+Toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
+Toggle.TextColor3 = Color3.new(1,1,1)
+Toggle.Font = Enum.Font.SourceSansBold
+Toggle.TextSize = 18
+Instance.new("UICorner", Toggle)
+
+local ListFrame = Instance.new("ScrollingFrame", Main)
+ListFrame.Position = UDim2.new(0,10,0,100)
+ListFrame.Size = UDim2.new(1,-20,1,-110)
+ListFrame.CanvasSize = UDim2.new(0,0,0,0)
+ListFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+ListFrame.BorderSizePixel = 0
+Instance.new("UICorner", ListFrame)
+
+local UIList = Instance.new("UIListLayout", ListFrame)
+UIList.Padding = UDim.new(0,5)
+
+local PlayerButtons = {}
+
+local function RefreshPlayers()
+    for _,b in pairs(PlayerButtons) do b:Destroy() end
+    PlayerButtons = {}
+
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local Btn = Instance.new("TextButton")
+            Btn.Size = UDim2.new(1,-10,0,35)
+            Btn.Text = plr.Name
+            Btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+            Btn.TextColor3 = Color3.new(1,1,1)
+            Btn.Font = Enum.Font.SourceSans
+            Btn.TextSize = 16
+            Btn.Parent = ListFrame
+            Instance.new("UICorner", Btn)
+
+            Btn.MouseButton1Click:Connect(function()
+                TargetPlayer = plr
+                for _,v in pairs(PlayerButtons) do
+                    v.BackgroundColor3 = Color3.fromRGB(60,60,60)
+                end
+                Btn.BackgroundColor3 = Color3.fromRGB(0,120,255)
+            end)
+
+            table.insert(PlayerButtons, Btn)
+        end
+    end
+
+    ListFrame.CanvasSize = UDim2.new(0,0,0,UIList.AbsoluteContentSize.Y + 10)
+end
+
+Players.PlayerAdded:Connect(RefreshPlayers)
+Players.PlayerRemoving:Connect(RefreshPlayers)
+RefreshPlayers()
+
+Toggle.MouseButton1Click:Connect(function()
+    FlyEnabled = not FlyEnabled
+
+    if FlyEnabled then
+        Toggle.Text = "STOP FLY"
+        Toggle.BackgroundColor3 = Color3.fromRGB(170,0,0)
+
+        EnableFly()
+        NoclipEnabled = true
+
+    else
+        Toggle.Text = "START FLY"
+        Toggle.BackgroundColor3 = Color3.fromRGB(0,170,0)
+
+        StopTween()
+        DisableFly()
+        NoclipEnabled = false
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if FlyEnabled and TargetPlayer then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        if FlyBV then
+            FlyBV.Velocity = Vector3.zero
+        end
+
+        if TargetPlayer.Character and TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            topos(TargetPlayer.Character.HumanoidRootPart.CFrame)
+        end
+    end
+end)
