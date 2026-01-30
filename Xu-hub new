@@ -1109,7 +1109,7 @@ y = y + 60 -- 下一個選項的 y 位置
                 end)
                 y = y + 60
         -- ===== 免控旋轉滑動開關 =====
-        createOptionRow(contentFrame, y, "免控", function(row)
+        createOptionRow(contentFrame, y, "移動速度", function(row)
             local switchBg = Instance.new("Frame")
             switchBg.Size = UDim2.new(0,60,0.5,0)
             switchBg.Position = UDim2.new(1,-70,0.25,0)
