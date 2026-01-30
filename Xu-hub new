@@ -8,6 +8,8 @@
 
         local player = Players.LocalPlayer
         local PlayerGui = player:WaitForChild("PlayerGui")
+-- ===== 目標座標 =====
+local TARGET_CFRAME = CFrame.new(-285,309, 595)
 
         -- ===== 核心 =====
         _G.FastAttack = true
@@ -1705,13 +1707,15 @@ local mainTitle = Instance.new("TextLabel")
 mainTitle.Size = UDim2.new(1,-20,0,60)
 mainTitle.Position = UDim2.new(0,10,0,y)
 mainTitle.BackgroundTransparency = 1
-mainTitle.Text = "傳送"
+mainTitle.Text = "blox fruit"
 mainTitle.Font = Enum.Font.SourceSansBold
 mainTitle.TextColor3 = Color3.fromRGB(255,255,255)
 mainTitle.TextXAlignment = Enum.TextXAlignment.Center
 mainTitle.TextYAlignment = Enum.TextYAlignment.Center
-mainTitle.TextSize = 40  -- ★★★ 在這裡改字大小 ★★★
+mainTitle.TextSize = 40      -- ★★★ 在這裡改字大小 ★★★
 mainTitle.Parent = contentFrame
+
+        y = y + 60
 
 -- 彩虹效果
 local hue = 0
@@ -1720,7 +1724,35 @@ RunService.RenderStepped:Connect(function(dt)
     mainTitle.TextColor3 = Color3.fromHSV(hue,1,1)
 end)
 
-y = y + 60 -- 下一個選項的 y 位置
+createOptionRow(contentFrame, y, "安全區(二海)", function(row)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 40, 0.7, 0)
+    button.Position = UDim2.new(1, -70, 0.15, 0)
+    button.BackgroundTransparency = 1
+    button.Text = "◉"
+    button.TextScaled = true
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Font = Enum.Font.SourceSansBold
+    button.Parent = row
+
+    button.MouseButton1Click:Connect(function()
+        -- ===== 動畫效果 =====
+        local shrinkTween = TweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+        local growTween = TweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+        shrinkTween:Play()
+        shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+        local flashTween = TweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+        local restoreTween = TweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+        flashTween:Play()
+        flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+        -- ===== 傳送功能 =====
+        local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        hrp.CFrame = TARGET_CFRAME
+    end)
+end)
 
             elseif index == 9 then
                     local y = 10
