@@ -398,6 +398,40 @@ end
             end
         end
 
+-- ================= Anti AFK Core =================
+local AntiAFK_ENABLED = false
+local AntiAFK_Connection
+
+local function enableAntiAFK()
+    if AntiAFK_ENABLED then return end
+    AntiAFK_ENABLED = true
+
+    if getconnections then
+        for _, connection in pairs(getconnections(Players.LocalPlayer.Idled)) do
+            if connection.Disable then
+                connection:Disable()
+            elseif connection.Disconnect then
+                connection:Disconnect()
+            end
+        end
+    else
+        AntiAFK_Connection = Players.LocalPlayer.Idled:Connect(function()
+            Services.VirtualUser:CaptureController()
+            Services.VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end
+end
+
+local function disableAntiAFK()
+    if not AntiAFK_ENABLED then return end
+    AntiAFK_ENABLED = false
+
+    if AntiAFK_Connection then
+        AntiAFK_Connection:Disconnect()
+        AntiAFK_Connection = nil
+    end
+end
+
         -- ===== v3核心 =====
 
 local Scripts = {}
@@ -813,6 +847,59 @@ end)
 
 y = y + 60 -- 下一個選項的 y 位置
 
+-- ================= Anti AFK Button =================
+createOptionRow(contentFrame, y, "Anti AFK", function(row)
+
+    local switchBg = Instance.new("Frame")
+    switchBg.Size = UDim2.new(0, 60, 0.5, 0)
+    switchBg.Position = UDim2.new(1, -70, 0.25, 0)
+    switchBg.BackgroundColor3 = AntiAFK_ENABLED 
+        and Color3.fromRGB(0, 200, 0) 
+        or Color3.fromRGB(100, 100, 100)
+    switchBg.BorderSizePixel = 0
+    switchBg.Parent = row
+    Instance.new("UICorner", switchBg).CornerRadius = UDim.new(0, 20)
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 28, 1, 0)
+    knob.Position = AntiAFK_ENABLED 
+        and UDim2.new(1, -28, 0, 0) 
+        or UDim2.new(0, 0, 0, 0)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    knob.Parent = switchBg
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 20)
+
+    -- 點擊切換
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, 0, 1, 0)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = switchBg
+
+    button.MouseButton1Click:Connect(function()
+        AntiAFK_ENABLED = not AntiAFK_ENABLED
+
+        if AntiAFK_ENABLED then
+            enableAntiAFK()
+        else
+            disableAntiAFK()
+        end
+
+        -- 視覺更新
+        switchBg.BackgroundColor3 = AntiAFK_ENABLED
+            and Color3.fromRGB(0, 200, 0)
+            or Color3.fromRGB(100, 100, 100)
+
+        knob:TweenPosition(
+            AntiAFK_ENABLED and UDim2.new(1, -28, 0, 0) or UDim2.new(0, 0, 0, 0),
+            Enum.EasingDirection.Out,
+            Enum.EasingStyle.Quad,
+            0.15,
+            true
+        )
+    end)
+end)
 
         y = y + 60
 
