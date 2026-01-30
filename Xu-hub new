@@ -1357,7 +1357,7 @@ elseif index == 4 then
 local frame = Instance.new("Frame", contentFrame)
 frame.Size = UDim2.new(1, 0, 0, 375) -- 寬度 100% 貼齊左右
 frame.Position = UDim2.new(0, 0, 0, y)
-frame.BackgroundColor3 = Color3.fromRGB(100,100,100) -- 灰色
+frame.BackgroundColor3 = Color3.fromRGB(50,50,50) -- 灰色
 frame.BorderSizePixel = 0
 
 -- 圓角
@@ -1378,7 +1378,6 @@ end
 
 local playerLabel = createLabel(50)
 local timeLabel = createLabel(95)
--- local playtimeLabel = createLabel(140) -- 移除遊玩時間
 local pingLabel = createLabel(140) -- 調整位置，把 Ping 往上移
 local placeLabel = createLabel(185) -- 也往上移
 placeLabel.Text = "PlaceId: "..game.PlaceId
@@ -1396,15 +1395,17 @@ copyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 輸入框 + Join 按鈕
+-- ================= 輸入框 + Join + Clear =================
 local inputBox = Instance.new("TextBox", frame)
-inputBox.Size = UDim2.new(1, -220, 0, 38)
+inputBox.Size = UDim2.new(1, -235, 0, 38) -- 留右側空間給 Join + Clear
 inputBox.Position = UDim2.new(0, 15, 0, 235)
 inputBox.PlaceholderText = "Enter PlaceId..."
 inputBox.ClearTextOnFocus = false
 inputBox.Font = Enum.Font.SourceSans
 inputBox.TextSize = 25
+inputBox.Text = "" 
 
+-- Join 按鈕
 local joinBtn = Instance.new("TextButton", frame)
 joinBtn.Size = UDim2.new(0, 90, 0, 38)
 joinBtn.Position = UDim2.new(1, -105, 0, 235)
@@ -1417,6 +1418,21 @@ joinBtn.MouseButton1Click:Connect(function()
         game:GetService("TeleportService"):Teleport(id, game.Players.LocalPlayer)
     end
 end)
+
+-- Clear 按鈕（放在 Join 按鈕左側）
+local clearBtn = Instance.new("TextButton", frame)
+clearBtn.Size = UDim2.new(0, 38, 0, 38) -- 方形按鈕
+clearBtn.Position = UDim2.new(1, -220, 0, 235) -- 緊靠 Join 按鈕左側
+clearBtn.Text = "X"
+clearBtn.Font = Enum.Font.SourceSansBold
+clearBtn.TextSize = 20
+clearBtn.TextColor3 = Color3.fromRGB(100, 100, 100)
+clearBtn.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+clearBtn.BorderSizePixel = 0
+clearBtn.MouseButton1Click:Connect(function()
+    inputBox.Text = "" -- 點擊清空輸入框
+end)
+
 
 -- ================= Drag Function =================
 local dragging, dragStart, startPos
@@ -1451,9 +1467,11 @@ RunService.RenderStepped:Connect(function()
     playerLabel.Text = string.format("Players: %d / %d", #Players:GetPlayers(), Players.MaxPlayers)
     
     -- 本地時間
-    local t = os.date("*t")
-    timeLabel.Text = string.format("Local Time: %02d:%02d:%02d", t.hour, t.min, t.sec)
-    
+local t = os.date("*t")
+timeLabel.Text = string.format(
+    "Local Time: %04d-%02d-%02d %02d:%02d",
+    t.year, t.month, t.day, t.hour, t.min
+)
     -- Ping
     local ping = LocalPlayer:GetNetworkPing() * 1000
     pingLabel.Text = string.format("Ping: %.0f ms", ping)
