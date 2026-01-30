@@ -30,7 +30,7 @@
         local EnemiesFolder = workspace:WaitForChild("Enemies")
         local CharactersFolder = workspace:WaitForChild("Characters")
 
--- ================= 免控滑行核心（無旋轉） =================
+-- ================= 免控滑行核心 =================
 local SLIDE_MAGNITUDE = 350
 local JUMP_HEIGHT = 100
 
