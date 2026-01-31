@@ -1675,6 +1675,7 @@ y = y + 60 -- 下一個選項的 y 位置
 
                 y = y + 60
 
+-- ================= 建立滑動開關 =================
 createOptionRow(contentFrame, y, "Fly to Player", function(row)
     local switchBg = Instance.new("Frame")
     switchBg.Size = UDim2.new(0,60,0.5,0)
@@ -1692,26 +1693,30 @@ createOptionRow(contentFrame, y, "Fly to Player", function(row)
     knob.Parent = switchBg
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,20)
 
+    -- 狀態同步函數
     local function setState(state)
         FlyEnabled = state
         NoclipEnabled = state
         if state then
-            EnableFly()
             switchBg.BackgroundColor3 = Color3.fromRGB(0,200,0)
             knob:TweenPosition(UDim2.new(1,-28,0,0),"Out","Quad",0.15,true)
         else
-            DisableFly()
             switchBg.BackgroundColor3 = Color3.fromRGB(100,100,100)
             knob:TweenPosition(UDim2.new(0,0,0,0),"Out","Quad",0.15,true)
         end
     end
 
+    -- 初始化 UI 與狀態同步
+    setState(FlyEnabled)
+
+    -- 滑動開關點擊
     switchBg.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             setState(not FlyEnabled)
         end
     end)
 end)
+
 y = y + 60
 
 -- 2️⃣ 玩家下拉選單
