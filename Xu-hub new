@@ -505,113 +505,59 @@ local function updateJumpPower(player)
     end
 end
 
--- ================== 狀態 ==================
+-- ================= State =================
 local FlyEnabled = false
 local NoclipEnabled = false
 local TargetPlayer = nil
+local FlySpeed = 350 -- 飛行速度
 
-local FlyBV = nil
-local FlyBG = nil
-
-local FLY_SPEED = 200
-
--- ================== 工具函數 ==================
-local function getCharacter()
-    return LocalPlayer.Character
-end
-
-local function getHumanoid()
-    local char = getCharacter()
-    return char and char:FindFirstChildOfClass("Humanoid")
-end
-
-local function getHRP()
-    local char = getCharacter()
-    return char and char:FindFirstChild("HumanoidRootPart")
-end
-
--- ================== Fly ==================
+-- ================= Fly Core =================
 local function EnableFly()
-    local hrp = getHRP()
-    local hum = getHumanoid()
-    if not hrp or not hum or FlyBV then return end
-
-    hum.PlatformStand = false
-    hum:ChangeState(Enum.HumanoidStateType.Running)
-    task.wait()
-
-    -- BodyVelocity
-    FlyBV = Instance.new("BodyVelocity")
-    FlyBV.MaxForce = Vector3.new(1e9,1e9,1e9)
-    FlyBV.Velocity = Vector3.zero
-    FlyBV.Parent = hrp
-
-    -- BodyGyro
-    FlyBG = Instance.new("BodyGyro")
-    FlyBG.MaxTorque = Vector3.new(1e9,1e9,1e9)
-    FlyBG.P = 50000
-    FlyBG.CFrame = hrp.CFrame
-    FlyBG.Parent = hrp
-
-    hum:ChangeState(Enum.HumanoidStateType.Physics)
-end
-
-local function DisableFly()
-    if FlyBV then FlyBV:Destroy() FlyBV = nil end
-    if FlyBG then FlyBG:Destroy() FlyBG = nil end
-
-    local hum = getHumanoid()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
     if hum then
-        hum.PlatformStand = false
-        hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        hum.PlatformStand = true
     end
 end
 
--- ================== Noclip ==================
-RunService.Stepped:Connect(function()
-    if not NoclipEnabled then return end
-    local char = getCharacter()
+local function DisableFly()
+    local char = LocalPlayer.Character
     if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum.PlatformStand = false
+    end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then hrp.Velocity = Vector3.zero end
+end
 
-    for _, part in ipairs(char:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.CanCollide = false
+-- ================= Noclip =================
+RunService.Stepped:Connect(function()
+    if NoclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
         end
     end
 end)
 
--- ================== Fly 控制核心 ==================
+-- ================= Fly Movement =================
 RunService.RenderStepped:Connect(function()
-    if not FlyEnabled then return end
+    if FlyEnabled and TargetPlayer then
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        local targetChar = TargetPlayer.Character
+        local targetHRP = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+        if not hrp or not targetHRP then return end
 
-    local hrp = getHRP()
-    local hum = getHumanoid()
-    if not hrp or not hum or not FlyBV or not FlyBG then return end
-
-    -- Anti Ragdoll / Anti Knockback
-    if hum:GetState() ~= Enum.HumanoidStateType.Physics then
-        hum.PlatformStand = false
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
-    end
-
-    -- 尚未選擇玩家 → 停止飛行
-    if not TargetPlayer then
-        FlyBV.Velocity = Vector3.zero
-        FlyBG.CFrame = hrp.CFrame
-        return
-    end
-
-    -- 選擇玩家 → 跟隨目標
-    if TargetPlayer.Character then
-        local targetHRP = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if targetHRP then
-            local dir = targetHRP.Position - hrp.Position
-            FlyBV.Velocity = dir.Unit * math.clamp(dir.Magnitude * 8, 80, 300) + Vector3.new(0,5,0)
-            FlyBG.CFrame = CFrame.new(hrp.Position, targetHRP.Position)
-        else
-            FlyBV.Velocity = Vector3.zero
-            FlyBG.CFrame = hrp.CFrame
-        end
+        local direction = (targetHRP.Position - hrp.Position)
+        if direction.Magnitude > 0 then direction = direction.Unit end
+        hrp.Velocity = direction * FlySpeed
     end
 end)
 
@@ -1729,7 +1675,6 @@ y = y + 60 -- 下一個選項的 y 位置
 
                 y = y + 60
 
--- 1️⃣ 飛行按鈕
 createOptionRow(contentFrame, y, "Fly to Player", function(row)
     local switchBg = Instance.new("Frame")
     switchBg.Size = UDim2.new(0,60,0.5,0)
@@ -1750,7 +1695,6 @@ createOptionRow(contentFrame, y, "Fly to Player", function(row)
     local function setState(state)
         FlyEnabled = state
         NoclipEnabled = state
-
         if state then
             EnableFly()
             switchBg.BackgroundColor3 = Color3.fromRGB(0,200,0)
@@ -1768,10 +1712,9 @@ createOptionRow(contentFrame, y, "Fly to Player", function(row)
         end
     end)
 end)
-
 y = y + 60
 
--- 2️⃣ 玩家下拉列表
+-- 2️⃣ 玩家下拉選單
 createOptionRow(contentFrame, y, "選擇玩家", function(row)
     local dropdown = Instance.new("TextButton")
     dropdown.Size = UDim2.new(0,160,0.6,0)
@@ -1833,7 +1776,6 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     Players.PlayerAdded:Connect(refreshPlayers)
     Players.PlayerRemoving:Connect(refreshPlayers)
 end)
-
 y = y + 60
 
             elseif index == 6 then
