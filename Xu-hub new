@@ -33,7 +33,7 @@ local TARGET_CFRAME = CFrame.new(-285,309, 595)
         local CharactersFolder = workspace:WaitForChild("Characters")
 
 -- ================= 核心參數 =================
-local SLIDE_MAGNITUDE = 350  -- 初始速度
+local SLIDE_MAGNITUDE = 200  -- 初始速度
 local ACCELERATION = 12      -- 加速
 local DECELERATION = 18      -- 減速
 local MAX_SPEED = 1000       -- 速度上限
