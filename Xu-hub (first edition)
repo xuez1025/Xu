@@ -463,10 +463,10 @@ player.CharacterAdded:Connect(onCharacter)
             end
         end
 
--- ================= Anti AFK Core =================
 local AntiAFK_ENABLED = false
 local AntiAFK_Connection
 
+-- 開啟 Anti-AFK
 local function enableAntiAFK()
     if AntiAFK_ENABLED then return end
     AntiAFK_ENABLED = true
@@ -485,8 +485,10 @@ local function enableAntiAFK()
             Services.VirtualUser:ClickButton2(Vector2.new())
         end)
     end
+    print("Anti-AFK ON")
 end
 
+-- 關閉 Anti-AFK
 local function disableAntiAFK()
     if not AntiAFK_ENABLED then return end
     AntiAFK_ENABLED = false
@@ -495,7 +497,10 @@ local function disableAntiAFK()
         AntiAFK_Connection:Disconnect()
         AntiAFK_Connection = nil
     end
+    print("Anti-AFK OFF")
 end
+
+enableAntiAFK()
 
         -- ===== v3核心 =====
 
