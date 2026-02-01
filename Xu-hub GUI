@@ -131,8 +131,8 @@ end)
 
 -- ===== 側欄按鈕 =====
 local buttonNames = {
-    "通用", "設定", "Server", "Status", "PVP", 
-    "Farm", "自動", "我太帥了", "天生可能就很帥了", "好像是"
+    "Title 1", "Title 2", "Title 3", "Title 4", "Title 5", 
+    "Title 6", "Title 7", "Title 8", "Title 9", "Title 10"
 }
 
 local buttons = {}
@@ -162,112 +162,156 @@ for i=1,10 do
     buttons[i] = {Button = btn, Indicator = indicator}
 end
 
--- ===== 右側內容區功能函數 =====
-local function contentFunction(index)
-    if index == 1 then
+        -- ===== 右側內容生成函數 =====
+        local function createOptionRow(parent, yPos, labelText, contentFunc)
+            local rowFrame = Instance.new("Frame")
+            rowFrame.Size = UDim2.new(1,-20,0,50)
+            rowFrame.Position = UDim2.new(0,10,0,yPos)
+            rowFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            rowFrame.BorderSizePixel = 0
+            rowFrame.Parent = parent
+
+            local rowCorner = Instance.new("UICorner")
+            rowCorner.CornerRadius = UDim.new(0,10)
+            rowCorner.Parent = rowFrame
+
+            local label = Instance.new("TextLabel")
+            label.Size = UDim2.new(0,160,1,0)
+            label.Position = UDim2.new(0,10,0,0)
+            label.BackgroundTransparency = 1
+            label.Text = labelText
+            label.TextColor3 = Color3.fromRGB(255,255,255)
+            label.TextScaled = true
+            label.TextSize = 20
+            label.TextWrapped = false
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.Parent = rowFrame
+
+            contentFunc(rowFrame)
+            return rowFrame
+        end
+
+        -- ===== 右側內容 =====
+        local function showContent(index)
+            contentFrame:ClearAllChildren()
+            for i,b in ipairs(buttons) do
+                b.Indicator.Visible = (i==index)
+            end
+
+        if index == 1 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "通用"
+        label.Text = "Title1"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize =40
         label.Parent = contentFrame
 
-    elseif index == 2 then
+        elseif index == 2 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "設定"
+        label.Text = "Title2"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 40
         label.Parent = contentFrame
         
-    elseif index == 3 then
+        elseif index == 3 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "server"
+        label.Text = "Title3"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 40
         label.Parent = contentFrame
 
-    elseif index == 4 then
+        elseif index == 4 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "狀態"
+        label.Text = "Title4"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 40
         label.Parent = contentFrame
 
-    elseif index == 5 then
+        elseif index == 5 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = " PVP "
+        label.Text = "Title5"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize =40
         label.Parent = contentFrame
 
-    elseif index == 6 then
+        elseif index == 6 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "Farm"
+        label.Text = "Title6"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 40
         label.Parent = contentFrame
 
-    elseif index == 7 then
+        elseif index == 7 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "自動"
+        label.Text = "Title7"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 40
         label.Parent = contentFrame
 
-    elseif index == 8 then
+        elseif index == 8 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "待開發"
+        label.Text = "Title8"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 80
         label.Parent = contentFrame
 
-    elseif index == 9 then
+        elseif index == 9 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "待開發"
+        label.Text = "Title9"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
         label.TextSize = 80
         label.Parent = contentFrame
 
-    elseif index == 10 then
+        elseif index == 10 then
+                    local y = 10
         local label = Instance.new("TextLabel")
         label.Size = UDim2.new(1,0,0,50)
         label.Position = UDim2.new(0,0,0,0)
-        label.Text = "待開發"
+        label.Text = "Title10"
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
@@ -276,69 +320,56 @@ local function contentFunction(index)
     end
 end
 
--- ===== 點擊側欄按鈕顯示內容（內容區完全空白） =====
-local function showContent(index)
-    -- 側欄指示條
-    for i, b in ipairs(buttons) do
-        b.Indicator.Visible = (i == index)
-    end
+        -- ===== 點擊側欄按鈕顯示內容（內容區完全空白） =====
+        for i,b in ipairs(buttons) do
+            b.Button.MouseButton1Click:Connect(function()
+                showContent(i)
+            end)
+        end
 
-    -- 清空右側內容區
-    contentFrame:ClearAllChildren()
+        -- 顯示 / 隱藏主框架
+        toggleBtn.MouseButton1Click:Connect(function()
+            mainFrame.Visible = not mainFrame.Visible
+        end)
 
-    -- 呼叫對應功能結構
-    contentFunction(index)
-end
+        -- ===== 可拖動功能 =====
+        local dragging = false
+        local dragInput
+        local dragStart
+        local startPos
 
-for i, b in ipairs(buttons) do
-    b.Button.MouseButton1Click:Connect(function()
-        showContent(i)
-    end)
-end
+        local function update(input)
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
 
--- 顯示 / 隱藏主框架
-toggleBtn.MouseButton1Click:Connect(function()
-    mainFrame.Visible = not mainFrame.Visible
-end)
+        titleBar.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                dragging = true
+                dragStart = input.Position
+                startPos = mainFrame.Position
 
--- ===== 可拖動功能 =====
-local dragging = false
-local dragInput
-local dragStart
-local startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    mainFrame.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
-end
-
-titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
+                input.Changed:Connect(function()
+                    if input.UserInputState == Enum.UserInputState.End then
+                        dragging = false
+                    end
+                end)
             end
         end)
-    end
-end)
 
-titleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
+        titleBar.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement then
+                dragInput = input
+            end
+        end)
 
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        update(input)
-    end
-end)
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                update(input)
+            end
+        end)
