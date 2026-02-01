@@ -291,7 +291,7 @@ end
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 80
+        label.TextSize =40
         label.Parent = contentFrame
 
         elseif index == 9 then
@@ -303,7 +303,7 @@ end
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 80
+        label.TextSize =40
         label.Parent = contentFrame
 
         elseif index == 10 then
@@ -315,7 +315,7 @@ end
         label.TextColor3 = Color3.fromRGB(255,255,255)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.SourceSansBold
-        label.TextSize = 80
+        label.TextSize =40
         label.Parent = contentFrame
     end
 end
