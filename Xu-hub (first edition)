@@ -46,13 +46,15 @@ local moving = false
 local moveConn
 local moveKeys = {W=false, A=false, S=false, D=false}
 local currentVelocity = Vector3.zero
-local wasMoving = false -- 記錄滑動移動原本是否開啟
+local wasMoving = false -- 原本滑動狀態
+local slideLocked = false -- 上船鎖定滑動
 
-local player = game:GetService("Players").LocalPlayer
-local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
+local player = Players.LocalPlayer
 local character, root, humanoid
 
 -- ================= 核心函數 =================
@@ -67,27 +69,28 @@ player.CharacterAdded:Connect(setupCharacter)
 -- ================= WASD 控制 =================
 UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
-    if input.KeyCode==Enum.KeyCode.W then moveKeys.W=true end
-    if input.KeyCode==Enum.KeyCode.A then moveKeys.A=true end
-    if input.KeyCode==Enum.KeyCode.S then moveKeys.S=true end
-    if input.KeyCode==Enum.KeyCode.D then moveKeys.D=true end
+    if input.KeyCode == Enum.KeyCode.W then moveKeys.W = true end
+    if input.KeyCode == Enum.KeyCode.A then moveKeys.A = true end
+    if input.KeyCode == Enum.KeyCode.S then moveKeys.S = true end
+    if input.KeyCode == Enum.KeyCode.D then moveKeys.D = true end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    if input.KeyCode==Enum.KeyCode.W then moveKeys.W=false end
-    if input.KeyCode==Enum.KeyCode.A then moveKeys.A=false end
-    if input.KeyCode==Enum.KeyCode.S then moveKeys.S=false end
-    if input.KeyCode==Enum.KeyCode.D then moveKeys.D=false end
+    if input.KeyCode == Enum.KeyCode.W then moveKeys.W = false end
+    if input.KeyCode == Enum.KeyCode.A then moveKeys.A = false end
+    if input.KeyCode == Enum.KeyCode.S then moveKeys.S = false end
+    if input.KeyCode == Enum.KeyCode.D then moveKeys.D = false end
 end)
 
 -- ================= 移動核心 =================
 local function startMove()
-    if moving or not root then return end
+    if moving or not root or slideLocked then return end -- 鎖定時不啟動
     moving = true
-    wasMoving = true -- 手動開啟滑動就標記原本是開啟狀態
+    wasMoving = true
 
     moveConn = RunService.RenderStepped:Connect(function(dt)
-        if not root then return end
+        if not root or ACTIVE_SEAT then return end -- 坐船時不動
+        if slideLocked then return end -- 安全保護
 
         local cam = Workspace.CurrentCamera
         local look = Vector3.new(cam.CFrame.LookVector.X,0,cam.CFrame.LookVector.Z)
@@ -104,7 +107,7 @@ local function startMove()
         local lerpSpeed = dir.Magnitude > 0 and ACCELERATION or DECELERATION
         currentVelocity = currentVelocity:Lerp(targetVelocity, math.clamp(lerpSpeed*dt,0,1))
 
-        root.CFrame += Vector3.new(currentVelocity.X, 0, currentVelocity.Z) * dt
+        root.CFrame += Vector3.new(currentVelocity.X,0,currentVelocity.Z) * dt
     end)
 end
 
@@ -117,11 +120,12 @@ local function stopMove()
 end
 
 local function toggleMove(state)
+    if slideLocked and state then return end -- 鎖定時不能開啟
     if state then
         startMove()
     else
         stopMove()
-        wasMoving = false -- 手動關閉滑動也要更新原本狀態
+        wasMoving = false
         currentVelocity = Vector3.zero
     end
 end
@@ -149,28 +153,28 @@ local function onCharacter(char)
     local hum = char:WaitForChild("Humanoid")
 
     hum.Seated:Connect(function(sitting, seat)
-        if sitting and seat:IsA("VehicleSeat") then
-            -- 上船：暫停人物滑動，但保留 wasMoving 原本狀態
-            if moving then
-                stopMove()
-            end
+        if seat and seat:IsA("VehicleSeat") and sitting then
+            -- 上船：鎖定滑動
+            slideLocked = true
+            if moving then stopMove() end
 
             ACTIVE_SEAT = seat
             ORIGINAL_SEAT_SPEED = seat.MaxSpeed
             updateBoatSpeed()
         else
-            -- 離船：恢復船速度
+            -- 離船
+            slideLocked = false
             if ACTIVE_SEAT and ORIGINAL_SEAT_SPEED then
                 ACTIVE_SEAT.MaxSpeed = ORIGINAL_SEAT_SPEED
             end
             ACTIVE_SEAT = nil
             ORIGINAL_SEAT_SPEED = nil
 
-            -- 下船：根據原本滑動狀態處理
+            -- 下船：根據原本滑動狀態恢復
             if wasMoving then
-                startMove() -- 原本開啟滑動才恢復
+                startMove()
             else
-                currentVelocity = Vector3.zero -- 原本關閉只重置速度
+                currentVelocity = Vector3.zero
             end
         end
     end)
@@ -181,6 +185,57 @@ player.CharacterAdded:Connect(onCharacter)
 
 -- ================= 預設關閉人物滑動 =================
 toggleMove(false)
+
+-- ================= 水上行走 =================
+local waterWalkEnabled = false
+local platform
+
+local function createPlatform()
+    if platform then platform:Destroy() end
+    platform = Instance.new("Part")
+    platform.Size = Vector3.new(50, 1, 50)
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Transparency = 1
+    platform.Name = "WaterWalkPlatform"
+
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local waterY = Workspace:FindFirstChild("Water") and Workspace.Water.Position.Y or 0
+    local offset = -3
+    platform.Position = Vector3.new(hrp.Position.X, waterY + offset, hrp.Position.Z)
+    platform.Parent = Workspace
+end
+
+local function updatePlatform()
+    if not platform then return end
+    local hrp = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local waterY = Workspace:FindFirstChild("Water") and Workspace.Water.Position.Y or 0
+    local playerY = hrp.Position.Y
+    local offset = -3
+
+    if playerY < waterY then
+        platform.CanCollide = false
+    else
+        platform.CanCollide = true
+        platform.Position = Vector3.new(hrp.Position.X, waterY + offset, hrp.Position.Z)
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if waterWalkEnabled then
+        if not platform then createPlatform() end
+        updatePlatform()
+    else
+        if platform then
+            platform:Destroy()
+            platform = nil
+        end
+    end
+end)
 
         -- ===== Farm TP 核心狀態 =====
         local FarmTP = {
@@ -923,6 +978,49 @@ y = y + 60 -- 下一個選項的 y 位置
         end)
 
         y = y + 60
+
+createOptionRow(contentFrame, y, "水上行走", function(row)
+    local switchBg = Instance.new("Frame")
+    switchBg.Size = UDim2.new(0, 60, 0.5, 0)
+    switchBg.Position = UDim2.new(1, -70, 0.25, 0)
+    switchBg.BackgroundColor3 = waterWalkEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(100,100,100)
+    switchBg.BorderSizePixel = 0
+    switchBg.Parent = row
+    Instance.new("UICorner", switchBg).CornerRadius = UDim.new(0, 20)
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 28, 1, 0)
+    knob.Position = waterWalkEnabled and UDim2.new(1, -28, 0, 0) or UDim2.new(0, 0, 0, 0)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    knob.Parent = switchBg
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 20)
+
+    -- 點擊切換
+    switchBg.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            waterWalkEnabled = not waterWalkEnabled
+            switchBg.BackgroundColor3 = waterWalkEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(100,100,100)
+            knob:TweenPosition(waterWalkEnabled and UDim2.new(1, -28, 0, 0) or UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+
+            if waterWalkEnabled then
+                createPlatform()
+            elseif platform then
+                platform:Destroy()
+                platform = nil
+            end
+        end
+    end)
+end)
+
+-- 持續更新平台
+RunService.RenderStepped:Connect(function()
+    if waterWalkEnabled then
+        updatePlatform()
+    end
+end)
+
+y = y + 60
 
             elseif index == 2 then
                     local y = 10
@@ -1894,6 +1992,17 @@ y = y + 60 -- 下一個選項的 y 位置
             fill.BackgroundColor3 = Color3.fromRGB(255,150,0)
             fill.Parent = slider
 
+			                    local maxLabel = Instance.new("TextLabel")
+                    maxLabel.Size = UDim2.new(0,80,1,0)
+                    maxLabel.Position = UDim2.new(0,430,0,0)
+                    maxLabel.BackgroundTransparency = 1
+                    maxLabel.Text = "(max:50)"
+                    maxLabel.TextColor3 = Color3.fromRGB(200,200,200)
+                    maxLabel.TextScaled = true
+                    maxLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    maxLabel.Parent = row
+
+
             local MAX_HEIGHT = 50
             local dragging = false
 
@@ -1936,6 +2045,16 @@ y = y + 60 -- 下一個選項的 y 位置
             fill.Size = UDim2.new(FarmTP.Range/2000,0,1,0)
             fill.BackgroundColor3 = Color3.fromRGB(0,255,150)
             fill.Parent = slider
+
+                    local maxLabel = Instance.new("TextLabel")
+                    maxLabel.Size = UDim2.new(0,80,1,0)
+                    maxLabel.Position = UDim2.new(0,430,0,0)
+                    maxLabel.BackgroundTransparency = 1
+                    maxLabel.Text = "(max:2000m)"
+                    maxLabel.TextColor3 = Color3.fromRGB(200,200,200)
+                    maxLabel.TextScaled = true
+                    maxLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    maxLabel.Parent = row
 
             local MAX_RANGE = 2000
             local dragging = false
