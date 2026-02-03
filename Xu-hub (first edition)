@@ -15,11 +15,11 @@ local World2 = game.PlaceId == 4442272183 or game.PlaceId == 79091703265657
 local World3 = game.PlaceId == 7449423635 or game.PlaceId == 100117331123089
 
 -- ===== 目標座標 =====
-local TARGET_CFRAME1 = CFrame.new(-285,309,595)        -- World2
-local TARGET_CFRAME2 = CFrame.new(-12464,376,-7566)    -- World3
-local TARGET_CFRAME3 = CFrame.new(-5027,317,-3207)     -- World3
-local TARGET_CFRAME4 = CFrame.new(-5060,317,-3193)     -- World3
-
+local TARGET_CFRAME1 = CFrame.new(-285,309,595)
+local TARGET_CFRAME2 = CFrame.new(-12464,376,-7566)
+local TARGET_CFRAME3 = CFrame.new(-5027,317,-3207)
+local TARGET_CFRAME4 = CFrame.new(-5060,317,-3193)
+local TARGET_CFRAME5 = CFrame.new(-4624, 853, -1700)
         -- ===== 核心 =====
         _G.FastAttack = true
         local Settings = {
@@ -2498,6 +2498,66 @@ end)
 
             elseif index == 8 then
                     local y = 10
+
+if World1 then
+    -- 標題文字
+    local mainTitleSea = Instance.new("TextLabel")
+    mainTitleSea.Size = UDim2.new(1, -20, 0, 60)
+    mainTitleSea.Position = UDim2.new(0, 10, 0, y)
+    mainTitleSea.BackgroundTransparency = 1
+    mainTitleSea.Text = "一海"
+    mainTitleSea.Font = Enum.Font.SourceSansBold
+    mainTitleSea.TextColor3 = Color3.fromRGB(255, 255, 255)
+    mainTitleSea.TextXAlignment = Enum.TextXAlignment.Center
+    mainTitleSea.TextYAlignment = Enum.TextYAlignment.Center
+    mainTitleSea.TextSize = 40
+    mainTitleSea.Parent = contentFrame
+
+    y = y + 60
+
+    -- 彩虹效果
+    local hue = 0
+    RunService.RenderStepped:Connect(function(dt)
+        if mainTitleSea.Parent then
+            hue = (hue + dt / 2) % 1
+            mainTitleSea.TextColor3 = Color3.fromHSV(hue, 1, 1)
+        end
+    end)
+
+    -- 一海按鈕
+    createOptionRow(contentFrame, y, "天空島", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        button.MouseButton1Click:Connect(function()
+            -- 按鈕動畫效果
+            local shrinkTween = TweenService:Create(button, TweenInfo.new(0.1), {Size = UDim2.new(0, 30, 0.7, 0)})
+            local growTween = TweenService:Create(button, TweenInfo.new(0.1), {Size = UDim2.new(0, 40, 0.7, 0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = TweenService:Create(button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 0)})
+            local restoreTween = TweenService:Create(button, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(255, 255, 255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            -- 傳送功能
+            local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+            hrp.CFrame = TARGET_CFRAME5
+        end)
+    end)
+
+    y = y + 60
+end
+
 if World2 then
     local mainTitle2Sea = Instance.new("TextLabel")
     mainTitle2Sea.Size = UDim2.new(1,-20,0,60)
