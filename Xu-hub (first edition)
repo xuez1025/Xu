@@ -2628,20 +2628,29 @@ y = y + 60 -- 下一個選項的 y 位置
             end
         end
 
-        -- ===== 點擊側欄按鈕顯示內容（內容區完全空白） =====
-        for i,b in ipairs(buttons) do
-            b.Button.MouseButton1Click:Connect(function()
-                showContent(i)
-            end)
-        end
+local currentPage = nil -- 記錄目前頁面
 
--- ===== 開關 Xu-hub =====
+-- 點擊側欄按鈕
+for i, b in ipairs(buttons) do
+    b.Button.MouseButton1Click:Connect(function()
+        showContent(i)
+        currentPage = i
+    end)
+end
+
+-- 開關 Xu-hub
 toggleBtn.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
 
-    -- 第一次打開時，顯示自動頁
     if mainFrame.Visible then
-        showContent(7)
+
+        if not currentPage then
+            showContent(1)
+            currentPage = 1
+        else
+
+            showContent(currentPage)
+        end
     end
 end)
 
