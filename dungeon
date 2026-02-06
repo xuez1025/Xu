@@ -10,6 +10,8 @@ local UserInputService = game:GetService("UserInputService")
 -- Player / Character
 --==================================================
 local player = Players.LocalPlayer
+local PlayerGui = player:WaitForChild("PlayerGui")
+
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 local hrp = character:WaitForChild("HumanoidRootPart")
@@ -22,61 +24,51 @@ player.CharacterAdded:Connect(function(char)
 end)
 
 --==================================================
--- Config
+-- Config / State
 --==================================================
 local CHECK_INTERVAL = 1
 local DETECTION_RADIUS = 1000
 local COOLDOWN = 3
 
---==================================================
--- State
---==================================================
 local AutoTeleportEnabled = true
 local isTeleporting = false
 local lastTeleportTime = 0
 
 --==================================================
--- Dungeon Logic
+-- Teleport Logic
 --==================================================
-local function getExitTeleporters()
-	local list = {}
+local function getExitRoots()
+	local roots = {}
 	local map = Workspace:FindFirstChild("Map")
-	if not map then return list end
+	if not map then return roots end
 
 	local dungeon = map:FindFirstChild("Dungeon")
-	if not dungeon then return list end
+	if not dungeon then return roots end
 
 	for _, folder in ipairs(dungeon:GetChildren()) do
-		local level = tonumber(folder.Name)
-		if level then
+		if tonumber(folder.Name) then
 			local tp = folder:FindFirstChild("ExitTeleporter")
 			if tp and tp:FindFirstChild("Root") then
-				table.insert(list, {
-					level = level,
-					root = tp.Root
-				})
+				table.insert(roots, tp.Root)
 			end
 		end
 	end
-	return list
+	return roots
 end
 
-local function getCurrentExit()
-	local closest
-	local minDist = math.huge
-
-	for _, t in ipairs(getExitTeleporters()) do
-		local dist = (hrp.Position - t.root.Position).Magnitude
-		if dist < minDist and dist < DETECTION_RADIUS then
-			minDist = dist
-			closest = t
+local function getClosestExit()
+	local closest, minDist = nil, math.huge
+	for _, root in ipairs(getExitRoots()) do
+		local d = (hrp.Position - root.Position).Magnitude
+		if d < minDist and d < DETECTION_RADIUS then
+			minDist = d
+			closest = root
 		end
 	end
-
 	return closest
 end
 
-local function teleportTo(root)
+local function teleport(root)
 	if isTeleporting then return end
 	if tick() - lastTeleportTime < COOLDOWN then return end
 
@@ -101,17 +93,14 @@ local function teleportTo(root)
 	tween:Play()
 end
 
---==================================================
--- Main Loop (過關卡)
---==================================================
 task.spawn(function()
 	while task.wait(CHECK_INTERVAL) do
 		if not AutoTeleportEnabled then continue end
 		if humanoid.Health <= 0 then continue end
 
-		local exit = getCurrentExit()
+		local exit = getClosestExit()
 		if exit then
-			teleportTo(exit.root)
+			teleport(exit)
 		end
 	end
 end)
@@ -119,7 +108,6 @@ end)
 --==================================================
 -- GUI
 --==================================================
-local PlayerGui = player:WaitForChild("PlayerGui")
 if PlayerGui:FindFirstChild("AutoTeleportGUI") then
 	PlayerGui.AutoTeleportGUI:Destroy()
 end
@@ -127,10 +115,11 @@ end
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "AutoTeleportGUI"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.Parent = PlayerGui
 
 local Main = Instance.new("Frame")
-Main.Size = UDim2.new(0, 220, 0, 150)
+Main.Size = UDim2.new(0, 240, 0, 160)
 Main.Position = UDim2.new(0, 100, 0, 100)
 Main.BackgroundColor3 = Color3.fromRGB(35,35,35)
 Main.BorderSizePixel = 0
@@ -139,50 +128,53 @@ Main.Parent = ScreenGui
 local TitleBar = Instance.new("Frame")
 TitleBar.Size = UDim2.new(1, 0, 0, 30)
 TitleBar.BackgroundColor3 = Color3.fromRGB(25,25,25)
+TitleBar.BorderSizePixel = 0
 TitleBar.Parent = Main
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, -60, 1, 0)
+Title.Size = UDim2.new(1, -70, 1, 0)
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.BackgroundTransparency = 1
 Title.Text = "Auto Teleport"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.Font = Enum.Font.SourceSansBold
 Title.TextSize = 18
-Title.TextXAlignment = Left
+Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.Parent = TitleBar
 
-local Close = Instance.new("TextButton")
-Close.Size = UDim2.new(0, 30, 1, 0)
-Close.Position = UDim2.new(1, -30, 0, 0)
-Close.Text = "X"
-Close.TextColor3 = Color3.new(1,1,1)
-Close.BackgroundColor3 = Color3.fromRGB(150,50,50)
-Close.Parent = TitleBar
+local function newButton(text, size, pos, color, parent)
+	local b = Instance.new("TextButton")
+	b.Text = text
+	b.Size = size
+	b.Position = pos
+	b.BackgroundColor3 = color
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Font = Enum.Font.SourceSansBold
+	b.TextSize = 18
+	b.BorderSizePixel = 0
+	b.AutoButtonColor = true
+	b.Parent = parent
+	return b
+end
 
-local Minimize = Instance.new("TextButton")
-Minimize.Size = UDim2.new(0, 30, 1, 0)
-Minimize.Position = UDim2.new(1, -60, 0, 0)
-Minimize.Text = "-"
-Minimize.TextColor3 = Color3.new(1,1,1)
-Minimize.BackgroundColor3 = Color3.fromRGB(70,70,70)
-Minimize.Parent = TitleBar
+local Minimize = newButton("-", UDim2.new(0,30,1,0), UDim2.new(1,-60,0,0), Color3.fromRGB(70,70,70), TitleBar)
+local Close    = newButton("X", UDim2.new(0,30,1,0), UDim2.new(1,-30,0,0), Color3.fromRGB(150,50,50), TitleBar)
 
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, 0, 1, -30)
-Content.Position = UDim2.new(0, 0, 0, 30)
+Content.Size = UDim2.new(1,0,1,-30)
+Content.Position = UDim2.new(0,0,0,30)
 Content.BackgroundTransparency = 1
 Content.Parent = Main
 
-local Toggle = Instance.new("TextButton")
-Toggle.Size = UDim2.new(1, -20, 0, 40)
-Toggle.Position = UDim2.new(0, 10, 0, 30)
-Toggle.Font = Enum.Font.SourceSansBold
-Toggle.TextSize = 20
-Toggle.TextColor3 = Color3.new(1,1,1)
-Toggle.Parent = Content
+local Toggle = newButton(
+	"",
+	UDim2.new(1,-20,0,45),
+	UDim2.new(0,10,0,30),
+	Color3.fromRGB(60,120,60),
+	Content
+)
 
-local function updateToggle()
+local function refreshToggle()
 	if AutoTeleportEnabled then
 		Toggle.Text = "狀態：ON"
 		Toggle.BackgroundColor3 = Color3.fromRGB(60,120,60)
@@ -191,54 +183,46 @@ local function updateToggle()
 		Toggle.BackgroundColor3 = Color3.fromRGB(120,60,60)
 	end
 end
-updateToggle()
+refreshToggle()
 
 Toggle.MouseButton1Click:Connect(function()
 	AutoTeleportEnabled = not AutoTeleportEnabled
-	updateToggle()
+	refreshToggle()
 end)
 
---==================================================
--- GUI Drag
---==================================================
+-- Drag
 do
-	local dragging, dragStart, startPos
-
-	TitleBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	local dragging, startMouse, startPos
+	TitleBar.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = true
-			dragStart = input.Position
+			startMouse = i.Position
 			startPos = Main.Position
 		end
 	end)
-
-	TitleBar.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	UserInputService.InputEnded:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
 			dragging = false
 		end
 	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			local delta = input.Position - dragStart
+	UserInputService.InputChanged:Connect(function(i)
+		if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local d = i.Position - startMouse
 			Main.Position = UDim2.new(
 				startPos.X.Scale,
-				startPos.X.Offset + delta.X,
+				startPos.X.Offset + d.X,
 				startPos.Y.Scale,
-				startPos.Y.Offset + delta.Y
+				startPos.Y.Offset + d.Y
 			)
 		end
 	end)
 end
 
---==================================================
--- GUI Buttons
---==================================================
 local minimized = false
 Minimize.MouseButton1Click:Connect(function()
 	minimized = not minimized
 	Content.Visible = not minimized
-	Main.Size = minimized and UDim2.new(0,220,0,30) or UDim2.new(0,220,0,150)
+	Main.Size = minimized and UDim2.new(0,240,0,30) or UDim2.new(0,240,0,160)
 end)
 
 Close.MouseButton1Click:Connect(function()
