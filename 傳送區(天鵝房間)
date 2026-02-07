@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 -- ===== 傳送座標 =====
-local TARGET_CFRAME = CFrame.new(2284, 15, 910)
+local TARGET_CFRAME = CFrame.new(-286,306,593)
 
 -- ===== GUI =====
 local ScreenGui = Instance.new("ScreenGui")
