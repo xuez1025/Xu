@@ -1108,6 +1108,81 @@ local TeleportTargets = {
         Intermediate = CFrame.new( 922,  125,  32843),
         Target = Vector3.new(-5157, 3,2377)
     },
+    {
+        Name = "港口37",
+        Intermediate = CFrame.new(-5027,317, -3207),
+        Target = Vector3.new(-572, 232,5770)
+    },
+    {
+        Name = "烏龜屋38",
+        Intermediate = CFrame.new(-5060,317,-3193),
+        Target = Vector3.new(-12550, 337,-7506)
+    },
+    {
+        Name = "海上城堡39",
+        Intermediate = CFrame.new(-12464,376,-7566),
+        Target = Vector3.new(-4929, 317,-3041)
+    },
+    {
+        Name = "大媽島40",
+        Intermediate = CFrame.new(-12464,376,-7566),
+        Target = Vector3.new(-726, 381,-10977)
+    },
+    {
+        Name = "海德拉41",
+        Intermediate = CFrame.new(-5027,317, -3207),
+        Target = Vector3.new(5761, 1089,467)
+    },
+    {
+        Name = "司法島42",
+        Intermediate = CFrame.new( -5097,  317,  -3177),
+        Target = Vector3.new(-15988, 470,938)
+    },
+    {
+        Name = "烏龜中心43",
+        Intermediate = CFrame.new( 5369,  25,  -506),
+        Target = Vector3.new(-11993, 332,-9089)
+    },
+    {
+        Name = "大樹44",
+        Intermediate = CFrame.new(-5027,317, -3207),
+        Target = Vector3.new(2551, 128,-6950)
+    },
+    {
+        Name = "烏龜山55",
+        Intermediate = CFrame.new( 5369,  25,  -506),
+        Target = Vector3.new(-12807, 897,-10793)
+    },
+    {
+        Name = "鬧鬼城堡56",
+        Intermediate = CFrame.new( -5097,  317,  -3177),
+        Target = Vector3.new(-9515, 164,5787)
+    },
+    {
+        Name = "花生島57",
+        Intermediate = CFrame.new(-12464,376,-7566),
+        Target = Vector3.new(-2040, 5,-9814)
+    },
+    {
+        Name = "烏龜入口58",
+        Intermediate = CFrame.new(-5060,317,-3193),
+        Target = Vector3.new(-10076, 332,-8321)
+    },
+    {
+        Name = "海德拉競技場59",
+        Intermediate = CFrame.new(-11993,332,-8837),
+        Target = Vector3.new(5014, 59,-1543)
+    },
+    {
+        Name = "可可島60",
+        Intermediate = CFrame.new(-12464,376,-7566),
+        Target = Vector3.new(182, 127,-12769)
+    },
+    {
+        Name = "蛋糕島61",
+        Intermediate = CFrame.new(-12464,376,-7566),
+        Target = Vector3.new(-2102, 70,-12134)
+    },
 }
 
 	   -- ===== Xu-hub UI =====
@@ -4251,6 +4326,512 @@ if World2 then
 
 end
 
+if World3 then
+    local y = 10 -- 每個世界的起點
+
+    -- ===== 彩虹大標題 =====
+    local mainTitle = Instance.new("TextLabel")
+    mainTitle.Size = UDim2.new(1,-20,0,60)
+    mainTitle.Position = UDim2.new(0,10,0,y)
+    mainTitle.BackgroundTransparency = 1
+    mainTitle.Text = "三海"
+    mainTitle.Font = Enum.Font.SourceSansBold
+    mainTitle.TextColor3 = Color3.fromRGB(255,255,255)
+    mainTitle.TextXAlignment = Enum.TextXAlignment.Center
+    mainTitle.TextYAlignment = Enum.TextYAlignment.Center
+    mainTitle.TextSize = 40
+    mainTitle.Parent = contentFrame
+
+    -- 彩虹效果
+    local hue = 0
+    RunService.RenderStepped:Connect(function(dt)
+        hue = (hue + dt/2) % 1
+        mainTitle.TextColor3 = Color3.fromHSV(hue,1,1)
+    end)
+
+    y = y + 60 -- 下一個按鈕位置
+
+    createOptionRow(contentFrame, y, "港口", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[37].Intermediate, TeleportTargets[37].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "烏龜屋", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[38].Intermediate, TeleportTargets[38].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "海上城堡", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[39].Intermediate, TeleportTargets[39].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "大媽島", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[40].Intermediate, TeleportTargets[40].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "海德拉", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[41].Intermediate, TeleportTargets[41].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "司法島", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[42].Intermediate, TeleportTargets[42].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "烏龜中心", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[43].Intermediate, TeleportTargets[43].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "大樹", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[44].Intermediate, TeleportTargets[44].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "烏龜山", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[45].Intermediate, TeleportTargets[45].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "鬧鬼城堡", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[46].Intermediate, TeleportTargets[46].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "花生島", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[47].Intermediate, TeleportTargets[47].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "烏龜入口", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[48].Intermediate, TeleportTargets[48].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "海德拉競技場", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[49].Intermediate, TeleportTargets[49].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "可可島", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[50].Intermediate, TeleportTargets[50].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+    createOptionRow(contentFrame, y, "蛋糕島", function(row)
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(0, 40, 0.7, 0)
+        button.Position = UDim2.new(1, -70, 0.15, 0)
+        button.BackgroundTransparency = 1
+        button.Text = "◉"
+        button.TextScaled = true
+        button.TextColor3 = Color3.fromRGB(255,255,255)
+        button.Font = Enum.Font.SourceSansBold
+        button.Parent = row
+
+        local tweenService = game:GetService("TweenService")
+
+        button.MouseButton1Click:Connect(function()
+            local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+            local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+            shrinkTween:Play()
+            shrinkTween.Completed:Connect(function() growTween:Play() end)
+
+            local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+            local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+            flashTween:Play()
+            flashTween.Completed:Connect(function() restoreTween:Play() end)
+
+            task.spawn(function()
+                SmartTeleport(TeleportTargets[51].Intermediate, TeleportTargets[51].Target)
+            end)
+        end)
+    end)
+
+    y = y + 60 -- 下一個按鈕
+
+end
             elseif index == 9 then
                     local y = 10
 -- ===== 彩虹大標題 =====
