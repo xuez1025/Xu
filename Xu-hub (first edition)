@@ -630,27 +630,62 @@ end
 -- ================= State =================
 local FlyEnabled = false
 local NoclipEnabled = false
-local FlySpeed = 350 -- 飛行速度
 
--- ================= Fly Core =================
-local function EnableFly()
+-- ================= Tween Fly =================
+local function topos(Pos)
     local char = LocalPlayer.Character
     if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.PlatformStand = true
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local Distance = (Pos.Position - hrp.Position).Magnitude
+    local Speed = 300
+    if Distance < 25 then
+        Speed = 10000
+    elseif Distance < 50 then
+        Speed = 2000
+    elseif Distance < 150 then
+        Speed = 800
+    elseif Distance < 250 then
+        Speed = 600
+    elseif Distance < 500 then
+        Speed = 400
+    elseif Distance < 750 then
+        Speed = 350
+    elseif Distance >= 1000 then
+        Speed = 300
     end
+
+    TweenService:Create(
+        hrp,
+        TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear),
+        {CFrame = Pos}
+    ):Play()
+end
+
+local function StopTween()
+    _G.StopTween = true
+    wait()
+    topos(LocalPlayer.Character.HumanoidRootPart.CFrame)
+    wait()
+    local clipPart = LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip")
+    if clipPart then clipPart:Destroy() end
+    local highlight = LocalPlayer.Character:FindFirstChild("Highlight")
+    if highlight then highlight:Destroy() end
+    _G.StopTween = false
+end
+
+-- ================= Fly Control =================
+local function EnableFly()
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.PlatformStand = true end
 end
 
 local function DisableFly()
     local char = LocalPlayer.Character
-    if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum.PlatformStand = false
-    end
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if hrp then hrp.Velocity = Vector3.zero end
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.PlatformStand = false end
 end
 
 -- ================= Noclip =================
@@ -674,15 +709,15 @@ RunService.RenderStepped:Connect(function()
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         if not hrp then return end
 
-        local moveDirection = Vector3.new(
+        local direction = Vector3.new(
             (UserInputService:IsKeyDown(Enum.KeyCode.D) and 1 or 0) - (UserInputService:IsKeyDown(Enum.KeyCode.A) and 1 or 0),
             (UserInputService:IsKeyDown(Enum.KeyCode.Space) and 1 or 0) - (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and 1 or 0),
             (UserInputService:IsKeyDown(Enum.KeyCode.S) and 1 or 0) - (UserInputService:IsKeyDown(Enum.KeyCode.W) and 1 or 0)
         )
-        if moveDirection.Magnitude > 0 then
-            hrp.Velocity = moveDirection.Unit * FlySpeed
-        else
-            hrp.Velocity = Vector3.zero
+
+        if direction.Magnitude > 0 then
+            local targetPos = hrp.CFrame + direction.Unit * 5 -- 每次小幅移動
+            topos(targetPos)
         end
     end
 end)
