@@ -2286,8 +2286,6 @@ y = y + 60 -- 下一個選項的 y 位置
 
                 y = y + 60
 
--- ================= Fly Toggle =================
--- ================= Fly to Player UI =================
 createOptionRow(contentFrame, y, "Fly to Player", function(row)
     local switchBg = Instance.new("Frame")
     switchBg.Size = UDim2.new(0,60,0.5,0)
@@ -2305,37 +2303,38 @@ createOptionRow(contentFrame, y, "Fly to Player", function(row)
     knob.Parent = switchBg
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,20)
 
-    -- 更新 UI 外觀
+    -- TweenService
+    local TweenService = game:GetService("TweenService")
+
+    -- 更新 UI
     local function updateUI()
-        if FlyEnabled then
-            switchBg.BackgroundColor3 = Color3.fromRGB(0,200,0)
-            knob.Position = UDim2.new(1,-28,0,0)
-        else
-            switchBg.BackgroundColor3 = Color3.fromRGB(100,100,100)
-            knob.Position = UDim2.new(0,0,0,0)
-        end
+        switchBg.BackgroundColor3 = FlyEnabled and Color3.fromRGB(0,200,0) or Color3.fromRGB(100,100,100)
+        TweenService:Create(
+            knob,
+            TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {Position = FlyEnabled and UDim2.new(1,-28,0,0) or UDim2.new(0,0,0,0)}
+        ):Play()
     end
 
-    -- 設定狀態
     local function setState(state)
         FlyEnabled = state
         NoclipEnabled = state
-        if state then
-            EnableFly()
-        else
-            DisableFly()
-        end
+        if state then EnableFly() else DisableFly() end
         updateUI()
     end
 
-    -- 初始化 UI 狀態，不重置 Fly/Noclip
+    -- 初始化 UI
     updateUI()
 
-    -- 點擊開關
-    switchBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            setState(not FlyEnabled)
-        end
+    -- TextButton 覆蓋層
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromScale(1,1)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = switchBg
+
+    button.MouseButton1Click:Connect(function()
+        setState(not FlyEnabled)
     end)
 end)
 
