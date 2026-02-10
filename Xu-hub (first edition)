@@ -2352,8 +2352,6 @@ end)
 
 y = y + 60
 
-
--- ================= Target Player Dropdown =================
 createOptionRow(contentFrame, y, "選擇玩家", function(row)
     local dropdown = Instance.new("TextButton")
     dropdown.Size = UDim2.new(0,160,0.6,0)
@@ -2363,27 +2361,37 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     dropdown.TextColor3 = Color3.new(1,1,1)
     dropdown.Font = Enum.Font.SourceSans
     dropdown.TextSize = 16
+    dropdown.ZIndex = 10
     dropdown.Parent = row
     Instance.new("UICorner", dropdown)
 
+    -- ===== 浮層列表（重點）=====
+    local ScreenGui = row:FindFirstAncestorOfClass("ScreenGui")
+
     local list = Instance.new("Frame")
     list.Size = UDim2.new(0,160,0,0)
-    list.Position = UDim2.new(1,-170,1,5)
     list.BackgroundColor3 = Color3.fromRGB(40,40,40)
     list.Visible = false
     list.ClipsDescendants = true
-    list.Parent = row
+    list.ZIndex = 100
+    list.Parent = ScreenGui
     Instance.new("UICorner", list)
 
-    local layout = Instance.new("UIListLayout", list)
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = list
+
+    -- 對齊 dropdown 的世界座標
+    local function updatePosition()
+        local pos = dropdown.AbsolutePosition
+        local size = dropdown.AbsoluteSize
+        list.Position = UDim2.fromOffset(pos.X, pos.Y + size.Y + 4)
+    end
 
     local function refreshPlayers()
-        -- 刪掉舊按鈕
         for _,c in ipairs(list:GetChildren()) do
             if c:IsA("TextButton") then c:Destroy() end
         end
 
-        -- 生成玩家按鈕
         for _,plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
                 local btn = Instance.new("TextButton")
@@ -2391,6 +2399,9 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
                 btn.Text = plr.Name
                 btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
                 btn.TextColor3 = Color3.new(1,1,1)
+                btn.Font = Enum.Font.SourceSans
+                btn.TextSize = 15
+                btn.ZIndex = 101
                 btn.Parent = list
 
                 btn.MouseButton1Click:Connect(function()
@@ -2402,15 +2413,15 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
             end
         end
 
-        -- 保留已選玩家文字
-        dropdown.Text = TargetPlayer and TargetPlayer.Name or "點選"
-
+        task.wait()
         list.Size = UDim2.new(0,160,0,layout.AbsoluteContentSize.Y)
     end
 
     dropdown.MouseButton1Click:Connect(function()
-        list.Visible = not list.Visible
+        updatePosition()
         refreshPlayers()
+        list.Visible = not list.Visible
+
         list:TweenSize(
             list.Visible and UDim2.new(0,160,0,layout.AbsoluteContentSize.Y)
             or UDim2.new(0,160,0,0),
@@ -2418,12 +2429,8 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
         )
     end)
 
-    -- 當玩家加入或離開，刷新列表，但保留 TargetPlayer
     Players.PlayerAdded:Connect(refreshPlayers)
     Players.PlayerRemoving:Connect(refreshPlayers)
-
-    -- 初始刷新一次
-    refreshPlayers()
 end)
 
 y = y + 60
