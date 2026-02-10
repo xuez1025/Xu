@@ -3,9 +3,10 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
 --// States
-local selectedType = nil
+local selectedType = "Melee" -- 初始設定為 Melee
 local autoEquipEnabled = true
 local guiOpen = true
+local selectedButton = nil -- 記錄目前選中的按鈕
 
 --// GUI
 local ScreenGui = Instance.new("ScreenGui", player.PlayerGui)
@@ -52,6 +53,7 @@ local function createButton(text, order)
     btn.Position = UDim2.new(0.05,0,(order-1)*0.17,0)
     btn.Text = text
     btn.TextScaled = true
+    btn.BackgroundColor3 = Color3.fromRGB(70,70,70) -- 預設顏色
     return btn
 end
 
@@ -66,66 +68,105 @@ local GunBtn   = createButton("槍 (Gun)",5)
 
 --// Equip Function
 local function equipByType(toolType)
-    if not autoEquipEnabled then return end
-
-    selectedType = toolType
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hum = char:WaitForChild("Humanoid")
-
-    for _, tool in ipairs(player.Backpack:GetChildren()) do
-        if tool:IsA("Tool") and tool.ToolTip == toolType then
-            hum:EquipTool(tool)
-            break
+    selectedType = toolType -- 無論 ON/OFF 都更新選擇
+    if autoEquipEnabled then
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hum = char:WaitForChild("Humanoid")
+        for _, tool in ipairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.ToolTip == toolType then
+                hum:EquipTool(tool)
+                break
+            end
         end
     end
 end
 
---// Toggle ON/OFF
+-- 更新按鈕顏色
+local function updateSelectedButton(btn)
+    for _, b in ipairs({MeleeBtn, FruitBtn, SwordBtn, GunBtn}) do
+        b.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    end
+    btn.BackgroundColor3 = Color3.fromRGB(60,150,60)
+    selectedButton = btn
+end
+
+-- 點擊武器按鈕
+local function onWeaponButtonClick(btn, typeName)
+    equipByType(typeName)        -- 更新選擇並嘗試裝備（如果 ON）
+    updateSelectedButton(btn)    -- 更新按鈕顏色
+end
+
+MeleeBtn.MouseButton1Click:Connect(function()
+    onWeaponButtonClick(MeleeBtn, "Melee")
+end)
+FruitBtn.MouseButton1Click:Connect(function()
+    onWeaponButtonClick(FruitBtn, "Blox Fruit")
+end)
+SwordBtn.MouseButton1Click:Connect(function()
+    onWeaponButtonClick(SwordBtn, "Sword")
+end)
+GunBtn.MouseButton1Click:Connect(function()
+    onWeaponButtonClick(GunBtn, "Gun")
+end)
+
+-- Toggle ON/OFF
 ToggleBtn.MouseButton1Click:Connect(function()
     autoEquipEnabled = not autoEquipEnabled
-
     if autoEquipEnabled then
         ToggleBtn.Text = "Auto Equip : ON"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(60,150,60)
+        if selectedType then
+            equipByType(selectedType)
+        end
     else
         ToggleBtn.Text = "Auto Equip : OFF"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(150,60,60)
     end
 end)
 
---// Equip Buttons
-MeleeBtn.MouseButton1Click:Connect(function()
-    equipByType("Melee")
-end)
-
-FruitBtn.MouseButton1Click:Connect(function()
-    equipByType("Blox Fruit")
-end)
-
-SwordBtn.MouseButton1Click:Connect(function()
-    equipByType("Sword")
-end)
-
-GunBtn.MouseButton1Click:Connect(function()
-    equipByType("Gun")
-end)
-
---// Respawn Auto Equip
-player.CharacterAdded:Connect(function()
-    if autoEquipEnabled and selectedType then
-        task.wait(1)
-        equipByType(selectedType)
-    end
-end)
-
---// Minimize
+-- Minimize
 MinBtn.MouseButton1Click:Connect(function()
     guiOpen = not guiOpen
     Buttons.Visible = guiOpen
     Main.Size = guiOpen and UDim2.fromScale(0.25,0.4) or UDim2.fromScale(0.25,0.15)
 end)
 
---// Close
+-- Close
 CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
+
+-- 初始自動裝備 Melee 並更新按鈕顏色
+equipByType("Melee")
+updateSelectedButton(MeleeBtn)
+
+--// 自動切回監控
+local function monitorCurrentTool()
+    task.spawn(function()
+        while true do
+            task.wait(0.1)
+            if autoEquipEnabled then
+                local char = player.Character
+                if char then
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        local tool = hum:FindFirstChildOfClass("Tool")
+                        if not tool or tool.ToolTip ~= selectedType then
+                            equipByType(selectedType)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+-- 角色生成監控
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    equipByType(selectedType)
+    monitorCurrentTool()
+end)
+
+-- 初始監控
+monitorCurrentTool()
