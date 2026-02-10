@@ -2340,12 +2340,13 @@ end)
 
 y = y + 60
 
+
 -- ================= Target Player Dropdown =================
 createOptionRow(contentFrame, y, "選擇玩家", function(row)
     local dropdown = Instance.new("TextButton")
     dropdown.Size = UDim2.new(0,160,0.6,0)
     dropdown.Position = UDim2.new(1,-170,0.2,0)
-    dropdown.Text = "點選"
+    dropdown.Text = TargetPlayer and TargetPlayer.Name or "點選"
     dropdown.BackgroundColor3 = Color3.fromRGB(60,60,60)
     dropdown.TextColor3 = Color3.new(1,1,1)
     dropdown.Font = Enum.Font.SourceSans
@@ -2365,10 +2366,12 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     local layout = Instance.new("UIListLayout", list)
 
     local function refreshPlayers()
+        -- 刪掉舊按鈕
         for _,c in ipairs(list:GetChildren()) do
             if c:IsA("TextButton") then c:Destroy() end
         end
 
+        -- 生成玩家按鈕
         for _,plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
                 local btn = Instance.new("TextButton")
@@ -2387,6 +2390,9 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
             end
         end
 
+        -- 保留已選玩家文字
+        dropdown.Text = TargetPlayer and TargetPlayer.Name or "點選"
+
         list.Size = UDim2.new(0,160,0,layout.AbsoluteContentSize.Y)
     end
 
@@ -2400,8 +2406,12 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
         )
     end)
 
+    -- 當玩家加入或離開，刷新列表，但保留 TargetPlayer
     Players.PlayerAdded:Connect(refreshPlayers)
     Players.PlayerRemoving:Connect(refreshPlayers)
+
+    -- 初始刷新一次
+    refreshPlayers()
 end)
 
 y = y + 60
