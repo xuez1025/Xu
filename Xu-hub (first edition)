@@ -1345,6 +1345,44 @@ end)
 -- 初始監控
 monitorCurrentTool()
 
+--// Camlock Core
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+CamlockEnabled = false
+TargetPlayer = nil
+
+local CamlockConnection
+
+local function StartCamlock()
+    if CamlockConnection then CamlockConnection:Disconnect() end
+
+    CamlockConnection = RunService.RenderStepped:Connect(function()
+        if not CamlockEnabled then return end
+        if not TargetPlayer then return end
+        if not TargetPlayer.Character then return end
+
+        local hrp = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        Camera.CFrame = Camera.CFrame:Lerp(
+            CFrame.new(Camera.CFrame.Position, hrp.Position),
+            1
+        )
+    end)
+end
+
+local function StopCamlock()
+    if CamlockConnection then
+        CamlockConnection:Disconnect()
+        CamlockConnection = nil
+    end
+end
+
+StartCamlock()
 
 	   -- ===== Xu-hub UI =====
         local screenGui = Instance.new("ScreenGui")
@@ -2402,7 +2440,68 @@ end)
 
 y = y + 60
 
+createOptionRow(contentFrame, y, "視角鎖定", function(row)
+
+    local switchBg = Instance.new("Frame")
+    switchBg.Size = UDim2.new(0,60,0.5,0)
+    switchBg.Position = UDim2.new(1,-70,0.25,0)
+    switchBg.BackgroundColor3 = Color3.fromRGB(100,100,100)
+    switchBg.BorderSizePixel = 0
+    switchBg.Parent = row
+    Instance.new("UICorner", switchBg).CornerRadius = UDim.new(0,20)
+
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0,28,1,0)
+    knob.Position = UDim2.new(0,0,0,0)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BorderSizePixel = 0
+    knob.Parent = switchBg
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,20)
+
+    local TweenService = game:GetService("TweenService")
+
+    local function updateUI()
+        switchBg.BackgroundColor3 =
+            CamlockEnabled and Color3.fromRGB(0,200,0)
+            or Color3.fromRGB(100,100,100)
+
+        TweenService:Create(
+            knob,
+            TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {
+                Position = CamlockEnabled
+                    and UDim2.new(1,-28,0,0)
+                    or UDim2.new(0,0,0,0)
+            }
+        ):Play()
+    end
+
+    local function setState(state)
+        CamlockEnabled = state
+        updateUI()
+    end
+
+    updateUI()
+
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.fromScale(1,1)
+    button.BackgroundTransparency = 1
+    button.Text = ""
+    button.Parent = switchBg
+
+    button.MouseButton1Click:Connect(function()
+        setState(not CamlockEnabled)
+    end)
+
+end)
+
+y = y + 60
+
 createOptionRow(contentFrame, y, "選擇玩家", function(row)
+
+    local Players = game:GetService("Players")
+    local LocalPlayer = Players.LocalPlayer
+
     local dropdown = Instance.new("TextButton")
     dropdown.Size = UDim2.new(0,160,0.6,0)
     dropdown.Position = UDim2.new(1,-170,0.2,0)
@@ -2415,7 +2514,6 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     dropdown.Parent = row
     Instance.new("UICorner", dropdown)
 
-    -- ===== 浮層列表（重點）=====
     local ScreenGui = row:FindFirstAncestorOfClass("ScreenGui")
 
     local list = Instance.new("Frame")
@@ -2430,7 +2528,6 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     local layout = Instance.new("UIListLayout")
     layout.Parent = list
 
-    -- 對齊 dropdown 的世界座標
     local function updatePosition()
         local pos = dropdown.AbsolutePosition
         local size = dropdown.AbsoluteSize
@@ -2438,12 +2535,16 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     end
 
     local function refreshPlayers()
+
         for _,c in ipairs(list:GetChildren()) do
-            if c:IsA("TextButton") then c:Destroy() end
+            if c:IsA("TextButton") then
+                c:Destroy()
+            end
         end
 
         for _,plr in ipairs(Players:GetPlayers()) do
             if plr ~= LocalPlayer then
+
                 local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(1,0,0,30)
                 btn.Text = plr.Name
@@ -2458,7 +2559,11 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
                     TargetPlayer = plr
                     dropdown.Text = plr.Name
                     list.Visible = false
-                    list:TweenSize(UDim2.new(0,160,0,0),"Out","Quad",0.15,true)
+
+                    list:TweenSize(
+                        UDim2.new(0,160,0,0),
+                        "Out","Quad",0.15,true
+                    )
                 end)
             end
         end
@@ -2468,19 +2573,23 @@ createOptionRow(contentFrame, y, "選擇玩家", function(row)
     end
 
     dropdown.MouseButton1Click:Connect(function()
+
         updatePosition()
         refreshPlayers()
+
         list.Visible = not list.Visible
 
         list:TweenSize(
-            list.Visible and UDim2.new(0,160,0,layout.AbsoluteContentSize.Y)
-            or UDim2.new(0,160,0,0),
+            list.Visible
+                and UDim2.new(0,160,0,layout.AbsoluteContentSize.Y)
+                or UDim2.new(0,160,0,0),
             "Out","Quad",0.15,true
         )
     end)
 
     Players.PlayerAdded:Connect(refreshPlayers)
     Players.PlayerRemoving:Connect(refreshPlayers)
+
 end)
 
 y = y + 60
