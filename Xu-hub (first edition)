@@ -1384,20 +1384,20 @@ end
 
 StartCamlock()
 
-	   -- ===== Xu-hub UI =====
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Parent = PlayerGui
-        screenGui.Name = "XuHubGui"
+-- ===== ScreenGui =====
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = PlayerGui
+screenGui.Name = "XuHubGui"
 
--- ===== Xu-hub 小長方形開關 (透明黑邊 + 可拖動) =====
+-- ===== 小長方形開關 (透明黑邊 + 可拖動) =====
 local toggleBtn = Instance.new("TextButton")
 toggleBtn.Size = UDim2.new(0,120,0,50)
 toggleBtn.Position = UDim2.new(0.5,-60,0,0)
 toggleBtn.Text = "Xu-hub"
 toggleBtn.BackgroundColor3 = Color3.fromRGB(0,0,0)
-toggleBtn.BackgroundTransparency = 0.7 -- 半透明
-toggleBtn.TextColor3 = Color3.fromRGB(255,255,255) -- 初始文字顏色
-toggleBtn.BorderSizePixel = 2 -- 黑色邊框
+toggleBtn.BackgroundTransparency = 0.7
+toggleBtn.TextColor3 = Color3.fromRGB(255,255,255)
+toggleBtn.BorderSizePixel = 2
 toggleBtn.BorderColor3 = Color3.fromRGB(0,0,0)
 toggleBtn.TextScaled = true
 toggleBtn.Parent = screenGui
@@ -1407,10 +1407,9 @@ toggleCorner.CornerRadius = UDim.new(0,10)
 toggleCorner.Parent = toggleBtn
 
 -- 彩虹文字效果
-local RunService = game:GetService("RunService")
 local hue = 0
 RunService.RenderStepped:Connect(function(dt)
-    hue = (hue + dt/2) % 1 -- 每秒轉動色相
+    hue = (hue + dt/2) % 1
     toggleBtn.TextColor3 = Color3.fromHSV(hue,1,1)
 end)
 
@@ -1450,115 +1449,112 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
-        -- 主框架
-        local mainFrame = Instance.new("Frame")
-        mainFrame.Size = UDim2.new(0,900,0,650)
-        mainFrame.Position = UDim2.new(0.5,-450,0.5,-325)
-        mainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-        mainFrame.BackgroundTransparency = 0.3
-        mainFrame.BorderSizePixel = 0
-        mainFrame.Visible = false
-        mainFrame.Parent = screenGui
-        local UICorner = Instance.new("UICorner")
-        UICorner.CornerRadius = UDim.new(0,10)
-        UICorner.Parent = mainFrame
+-- ===== 主框架 =====
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0,900,0,650)
+mainFrame.Position = UDim2.new(0.5,-450,0.5,-325)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+mainFrame.BackgroundTransparency = 0.3
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = false
+mainFrame.Parent = screenGui
 
-        -- 標題列
-        local titleBar = Instance.new("Frame")
-        titleBar.Size = UDim2.new(1,0,0,50)
-        titleBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
-        titleBar.BackgroundTransparency = 0.3
-        titleBar.Parent = mainFrame
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0,10)
+mainCorner.Parent = mainFrame
 
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Size = UDim2.new(1,-20,1,0)
-        titleLabel.Position = UDim2.new(0,10,0,0)
-        titleLabel.Text = "Xu-hub"
-        titleLabel.TextColor3 = Color3.fromRGB(255,255,255)
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-        titleLabel.Font = Enum.Font.SourceSansBold
-        titleLabel.TextSize = 32
-        titleLabel.Parent = titleBar
+-- ===== 標題列 =====
+local titleBar = Instance.new("Frame")
+titleBar.Size = UDim2.new(1,0,0,50)
+titleBar.BackgroundColor3 = Color3.fromRGB(20,20,20)
+titleBar.BackgroundTransparency = 0.3
+titleBar.Parent = mainFrame
 
-        -- 關閉按鈕
-        local closeBtn = Instance.new("TextButton")
-        closeBtn.Size = UDim2.new(0,30,0,30)
-        closeBtn.Position = UDim2.new(1,-40,0,10)
-        closeBtn.Text = "X"
-        closeBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-        closeBtn.BackgroundTransparency = 0.2
-        closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        closeBtn.Parent = titleBar
-        closeBtn.MouseButton1Click:Connect(function()
-            mainFrame:Destroy()
-            toggleBtn:Destroy()
-        end)
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1,-20,1,0)
+titleLabel.Position = UDim2.new(0,10,0,0)
+titleLabel.Text = "Xu-hub"
+titleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+titleLabel.BackgroundTransparency = 1
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextSize = 32
+titleLabel.Parent = titleBar
 
-        -- 縮小化按鈕 (-)
-        local minimizeBtn = Instance.new("TextButton")
-        minimizeBtn.Size = UDim2.new(0,30,0,30)
-        minimizeBtn.Position = UDim2.new(1,-80,0,10)
-        minimizeBtn.Text = "-"
-        minimizeBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-        minimizeBtn.BackgroundTransparency = 0.2
-        minimizeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-        minimizeBtn.Parent = titleBar
+-- 關閉按鈕
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0,30,0,30)
+closeBtn.Position = UDim2.new(1,-40,0,10)
+closeBtn.Text = "X"
+closeBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+closeBtn.BackgroundTransparency = 0.2
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.Parent = titleBar
+closeBtn.MouseButton1Click:Connect(function()
+    mainFrame:Destroy()
+    toggleBtn:Destroy()
+end)
 
-        local isMinimized = false
-        local originalSize = mainFrame.Size
-        local originalPosition = mainFrame.Position
+-- 縮小化按鈕 (-)
+local minimizeBtn = Instance.new("TextButton")
+minimizeBtn.Size = UDim2.new(0,30,0,30)
+minimizeBtn.Position = UDim2.new(1,-80,0,10)
+minimizeBtn.Text = "-"
+minimizeBtn.BackgroundColor3 = Color3.fromRGB(70,70,70)
+minimizeBtn.BackgroundTransparency = 0.2
+minimizeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+minimizeBtn.Parent = titleBar
 
-        -- 左側側欄
-        local sideBar = Instance.new("ScrollingFrame")
-        sideBar.Size = UDim2.new(0,180,1,-50)
-        sideBar.Position = UDim2.new(0,0,0,50)
-        sideBar.BackgroundColor3 = Color3.fromRGB(50,50,50)
-        sideBar.BackgroundTransparency = 0.4
-        sideBar.BorderSizePixel = 0
-        sideBar.ScrollBarThickness = 6
-        sideBar.Parent = mainFrame
-        local sideUICorner = Instance.new("UICorner")
-        sideUICorner.CornerRadius = UDim.new(0,10)
-        sideUICorner.Parent = sideBar
-
-        -- 右側內容區
-        local contentFrame = Instance.new("ScrollingFrame")
-        contentFrame.Size = UDim2.new(1,-180,1,-50)
-        contentFrame.Position = UDim2.new(0,180,0,50)
-        contentFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
-        contentFrame.BackgroundTransparency = 0.8
-        contentFrame.BorderSizePixel = 0
-        contentFrame.ScrollBarThickness = 6
-        contentFrame.Parent = mainFrame
-        local contentCorner = Instance.new("UICorner")
-        contentCorner.CornerRadius = UDim.new(0,10)
-        contentCorner.Parent = contentFrame
-
-        -- 縮小功能
-        minimizeBtn.MouseButton1Click:Connect(function()
-            if not isMinimized then
-                mainFrame.Size = UDim2.new(0, originalSize.X.Offset, 0, titleBar.Size.Y.Offset)
-                isMinimized = true
-                contentFrame.Visible = false
-                sideBar.Visible = false
-            else
-                mainFrame.Size = originalSize
-                mainFrame.Position = originalPosition
-                isMinimized = false
-                contentFrame.Visible = true
-                sideBar.Visible = true
-            end
-        end)
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-
-local guiVisible = false
-local tweenTime = 0.25 -- 縮放動畫時間
-
--- 保存主框架原始數值
+local isMinimized = false
 local originalSize = mainFrame.Size
 local originalPosition = mainFrame.Position
+
+minimizeBtn.MouseButton1Click:Connect(function()
+    if not isMinimized then
+        mainFrame.Size = UDim2.new(0, originalSize.X.Offset, 0, titleBar.Size.Y.Offset)
+        isMinimized = true
+        contentFrame.Visible = false
+        sideBar.Visible = false
+    else
+        mainFrame.Size = originalSize
+        mainFrame.Position = originalPosition
+        isMinimized = false
+        contentFrame.Visible = true
+        sideBar.Visible = true
+    end
+end)
+
+-- 左側側欄
+local sideBar = Instance.new("ScrollingFrame")
+sideBar.Size = UDim2.new(0,180,1,-50)
+sideBar.Position = UDim2.new(0,0,0,50)
+sideBar.BackgroundColor3 = Color3.fromRGB(50,50,50)
+sideBar.BackgroundTransparency = 0.4
+sideBar.BorderSizePixel = 0
+sideBar.ScrollBarThickness = 6
+sideBar.Parent = mainFrame
+
+local sideUICorner = Instance.new("UICorner")
+sideUICorner.CornerRadius = UDim.new(0,10)
+sideUICorner.Parent = sideBar
+
+-- 右側內容區
+local contentFrame = Instance.new("ScrollingFrame")
+contentFrame.Size = UDim2.new(1,-180,1,-50)
+contentFrame.Position = UDim2.new(0,180,0,50)
+contentFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+contentFrame.BackgroundTransparency = 0.8
+contentFrame.BorderSizePixel = 0
+contentFrame.ScrollBarThickness = 6
+contentFrame.Parent = mainFrame
+
+local contentCorner = Instance.new("UICorner")
+contentCorner.CornerRadius = UDim.new(0,10)
+contentCorner.Parent = contentFrame
+
+-- ===== GUI 顯示/隱藏功能 =====
+local guiVisible = false
+local tweenTime = 0.25
 
 local function showGUI()
     guiVisible = true
@@ -1567,7 +1563,6 @@ local function showGUI()
     sideBar.Visible = true
     contentFrame.Visible = true
 
-    -- 從小長方形開關位置縮放到主框架
     mainFrame.Size = UDim2.new(0, toggleBtn.Size.X.Offset, 0, toggleBtn.Size.Y.Offset)
     mainFrame.Position = toggleBtn.Position
 
@@ -1579,7 +1574,6 @@ end
 local function hideGUI()
     guiVisible = false
 
-    -- 從主框架縮回小長方形開關
     local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
     local goal = {
         Size = UDim2.new(0, toggleBtn.Size.X.Offset, 0, toggleBtn.Size.Y.Offset),
@@ -1591,10 +1585,11 @@ local function hideGUI()
         mainFrame.Visible = false
         sideBar.Visible = false
         contentFrame.Visible = false
-        toggleBtn.Visible = false
+        toggleBtn.Visible = true
     end)
 end
 
+-- ===== 觸發方式 =====
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.KeyCode == Enum.KeyCode.RightControl then
@@ -1603,6 +1598,14 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         else
             showGUI()
         end
+    end
+end)
+
+toggleBtn.MouseButton1Click:Connect(function()
+    if guiVisible then
+        hideGUI()
+    else
+        showGUI()
     end
 end)
 
