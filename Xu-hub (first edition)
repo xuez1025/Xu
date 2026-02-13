@@ -1550,11 +1550,66 @@ end)
                 sideBar.Visible = true
             end
         end)
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local guiVisible = false
+local tweenTime = 0.25 -- 縮放動畫時間
+
+-- 保存主框架原始數值
+local originalSize = mainFrame.Size
+local originalPosition = mainFrame.Position
+
+local function showGUI()
+    guiVisible = true
+    toggleBtn.Visible = true
+    mainFrame.Visible = true
+    sideBar.Visible = true
+    contentFrame.Visible = true
+
+    -- 從小長方形開關位置縮放到主框架
+    mainFrame.Size = UDim2.new(0, toggleBtn.Size.X.Offset, 0, toggleBtn.Size.Y.Offset)
+    mainFrame.Position = toggleBtn.Position
+
+    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local goal = {Size = originalSize, Position = originalPosition}
+    TweenService:Create(mainFrame, tweenInfo, goal):Play()
+end
+
+local function hideGUI()
+    guiVisible = false
+
+    -- 從主框架縮回小長方形開關
+    local tweenInfo = TweenInfo.new(tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    local goal = {
+        Size = UDim2.new(0, toggleBtn.Size.X.Offset, 0, toggleBtn.Size.Y.Offset),
+        Position = toggleBtn.Position
+    }
+    local tween = TweenService:Create(mainFrame, tweenInfo, goal)
+    tween:Play()
+    tween.Completed:Connect(function()
+        mainFrame.Visible = false
+        sideBar.Visible = false
+        contentFrame.Visible = false
+        toggleBtn.Visible = false
+    end)
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        if guiVisible then
+            hideGUI()
+        else
+            showGUI()
+        end
+    end
+end)
 
         -- ===== 側欄按鈕 =====
         local buttonNames = {
             "自動", "通用", "Server", "狀態", "PVP", 
-            "Farm", "設定", "傳送", "未解鎖", "未解鎖"
+            "Farm", "設定", "傳送", "娛樂", "其他"
         }
 
         local buttons = {}
@@ -5431,12 +5486,12 @@ local mainTitle = Instance.new("TextLabel")
 mainTitle.Size = UDim2.new(1,-20,0,60)
 mainTitle.Position = UDim2.new(0,10,0,y)
 mainTitle.BackgroundTransparency = 1
-mainTitle.Text = "未解鎖"
+mainTitle.Text = "娛樂"
 mainTitle.Font = Enum.Font.SourceSansBold
 mainTitle.TextColor3 = Color3.fromRGB(255,255,255)
 mainTitle.TextXAlignment = Enum.TextXAlignment.Center
 mainTitle.TextYAlignment = Enum.TextYAlignment.Center
-mainTitle.TextSize = 100      -- ★★★ 在這裡改字大小 ★★★
+mainTitle.TextSize = 40      -- ★★★ 在這裡改字大小 ★★★
 mainTitle.Parent = contentFrame
 
 -- 彩虹效果
@@ -5455,12 +5510,12 @@ local mainTitle = Instance.new("TextLabel")
 mainTitle.Size = UDim2.new(1,-20,0,60)
 mainTitle.Position = UDim2.new(0,10,0,y)
 mainTitle.BackgroundTransparency = 1
-mainTitle.Text = "未解鎖"
+mainTitle.Text = "其他"
 mainTitle.Font = Enum.Font.SourceSansBold
 mainTitle.TextColor3 = Color3.fromRGB(255,255,255)
 mainTitle.TextXAlignment = Enum.TextXAlignment.Center
 mainTitle.TextYAlignment = Enum.TextYAlignment.Center
-mainTitle.TextSize = 100      -- ★★★ 在這裡改字大小 ★★★
+mainTitle.TextSize = 40      -- ★★★ 在這裡改字大小 ★★★
 mainTitle.Parent = contentFrame
 
 -- 彩虹效果
