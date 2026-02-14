@@ -5681,6 +5681,46 @@ end)
 
 y = y + 60 -- 下一個選項的 y 位置
 
+-- ===== MangoJuice Hub =====
+createOptionRow(contentFrame, y, "MangoJuice Hub", function(row)
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(0, 40, 0.7, 0)
+    button.Position = UDim2.new(1, -70, 0.15, 0)
+    button.BackgroundTransparency = 1
+    button.Text = "◉"
+    button.TextScaled = true
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Font = Enum.Font.SourceSansBold
+    button.Parent = row
+
+    local tweenService = game:GetService("TweenService")
+
+    button.MouseButton1Click:Connect(function()
+        -- 按鈕縮放動畫
+        local shrinkTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,30,0.7,0)})
+        local growTween = tweenService:Create(button, TweenInfo.new(0.1), {Size=UDim2.new(0,40,0.7,0)})
+        shrinkTween:Play()
+        shrinkTween.Completed:Connect(function() 
+            growTween:Play() 
+        end)
+
+        -- 閃光動畫
+        local flashTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,0)})
+        local restoreTween = tweenService:Create(button, TweenInfo.new(0.15), {TextColor3=Color3.fromRGB(255,255,255)})
+        flashTween:Play()
+        flashTween.Completed:Connect(function() 
+            restoreTween:Play() 
+        end)
+
+        -- 執行腳本
+        task.spawn(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/mangojuice52042-star/MangoJuice-Hub/refs/heads/main/MangoJuice%20Hub%20Update"))()
+        end)
+    end)
+end)
+
+y = y + 60
+
             end
         end
 
