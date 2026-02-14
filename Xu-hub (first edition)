@@ -1510,15 +1510,50 @@ mainFrame.BorderSizePixel = 0
 mainFrame.Visible = false
 mainFrame.Parent = screenGui
 
-if isMobile then
-    -- 手機版（比例）
-    mainFrame.Size = UDim2.new(0.95,0,0.9,0)
-    mainFrame.Position = UDim2.new(0.025,0,0.05,0)
-else
-    -- PC版（固定尺寸）
-    mainFrame.Size = UDim2.new(0,900,0,650)
-    mainFrame.Position = UDim2.new(0.5,-450,0.5,-325)
-end
+local camera = workspace.CurrentCamera
+local viewportSize = camera.ViewportSize
+
+local screenWidth = viewportSize.X
+local screenHeight = viewportSize.Y
+
+-- 設定比例
+local widthScale = 0.75
+local heightScale = 0.8
+
+-- 計算基礎尺寸
+local calculatedWidth = screenWidth * widthScale
+local calculatedHeight = screenHeight * heightScale
+
+-- 設定最大最小限制（避免過大或過小）
+local minWidth = 600
+local minHeight = 400
+local maxWidth = 1200
+local maxHeight = 900
+
+calculatedWidth = math.clamp(calculatedWidth, minWidth, maxWidth)
+calculatedHeight = math.clamp(calculatedHeight, minHeight, maxHeight)
+
+-- 套用
+mainFrame.Size = UDim2.new(0, calculatedWidth, 0, calculatedHeight)
+mainFrame.Position = UDim2.new(
+    0.5, -calculatedWidth/2,
+    0.5, -calculatedHeight/2
+)
+
+camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
+    local viewportSize = camera.ViewportSize
+    local screenWidth = viewportSize.X
+    local screenHeight = viewportSize.Y
+
+    local calculatedWidth = math.clamp(screenWidth * 0.75, 600, 1200)
+    local calculatedHeight = math.clamp(screenHeight * 0.8, 400, 900)
+
+    mainFrame.Size = UDim2.new(0, calculatedWidth, 0, calculatedHeight)
+    mainFrame.Position = UDim2.new(
+        0.5, -calculatedWidth/2,
+        0.5, -calculatedHeight/2
+    )
+end)
 
 local originalSize = mainFrame.Size
 local originalPosition = mainFrame.Position
@@ -1588,7 +1623,7 @@ minimizeBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-local sideWidth = isMobile and 120 or 180
+local sideWidth = math.clamp(mainFrame.Size.X.Offset * 0.2, 120, 250)
 
 local sideBar = Instance.new("ScrollingFrame")
 sideBar.Size = UDim2.new(0, sideWidth, 1, -50)
