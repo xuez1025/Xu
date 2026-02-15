@@ -242,7 +242,8 @@ end)
 local FlyTP = {
     Enabled = false,
     HoverHeight = 10,
-    SearchRange = 500
+    SearchRange = 500,
+    Speed = 750 -- 單位/秒，調整飛行速度
 }
 
 local BringNPC = {
@@ -254,6 +255,10 @@ local flyConn
 local pullConn
 local targetNPC
 
+local RunService = game:GetService("RunService")
+local player = game.Players.LocalPlayer
+
+-- 停止飛行
 local function stopFly()
     if flyConn then
         flyConn:Disconnect()
@@ -262,10 +267,11 @@ local function stopFly()
     FlyTP.Enabled = false
 end
 
+-- 平滑飛行啟動
 local function startFly()
     if flyConn then return end
 
-    flyConn = RunService.Heartbeat:Connect(function()
+    flyConn = RunService.Heartbeat:Connect(function(deltaTime)
         if not FlyTP.Enabled then return end
 
         local char = player.Character
@@ -275,8 +281,8 @@ local function startFly()
         local enemiesFolder = workspace:FindFirstChild("Enemies")
         if not enemiesFolder then return end
 
+        -- 找最近 NPC
         local closest, dist = nil, math.huge
-
         for _, npc in pairs(enemiesFolder:GetChildren()) do
             if npc:FindFirstChild("Humanoid")
                 and npc.Humanoid.Health > 0
@@ -295,16 +301,29 @@ local function startFly()
         targetNPC = closest
 
         if targetNPC and targetNPC.PrimaryPart then
-            local tpos = Vector3.new(
+            local targetPos = Vector3.new(
                 targetNPC.PrimaryPart.Position.X,
                 targetNPC.PrimaryPart.Position.Y + FlyTP.HoverHeight,
                 targetNPC.PrimaryPart.Position.Z
             )
-            hrp.CFrame = CFrame.new(tpos)
+
+            -- 平滑飛行：Lerp 移動
+            local currentPos = hrp.Position
+            local maxStep = FlyTP.Speed * deltaTime
+            local direction = (targetPos - currentPos)
+            local distance = direction.Magnitude
+
+            if distance > maxStep then
+                local newPos = currentPos + direction.Unit * maxStep
+                hrp.CFrame = CFrame.new(newPos)
+            else
+                hrp.CFrame = CFrame.new(targetPos)
+            end
         end
     end)
 end
 
+-- 停止拉怪
 local function stopBring()
     if pullConn then
         pullConn:Disconnect()
@@ -313,6 +332,7 @@ local function stopBring()
     BringNPC.Enabled = false
 end
 
+-- 拉怪功能保留原本邏輯
 local function startBring()
     if pullConn then return end
 
