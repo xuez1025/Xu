@@ -1503,6 +1503,23 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+local function updateToggleByMainFrame()
+    -- 小長方形 ≈ GUI 寬度的 15%，高度固定比例
+    local w = math.clamp(mainFrame.Size.X.Offset * 0.15, 100, 160)
+    local h = math.clamp(mainFrame.Size.Y.Offset * 0.08, 40, 60)
+
+    toggleBtn.Size = UDim2.new(0, w, 0, h)
+
+    -- 若 GUI 是顯示狀態，保持 toggle 在 GUI 上方中央
+    if mainFrame.Visible then
+        toggleBtn.Position = UDim2.new(
+            0.5, -w/2,
+            mainFrame.Position.Y.Scale,
+            mainFrame.Position.Y.Offset - h - 8
+        )
+    end
+end
+
 local mainFrame = Instance.new("Frame")
 mainFrame.BackgroundColor3 = Color3.fromRGB(30,30,30)
 mainFrame.BackgroundTransparency = 0.3
@@ -1517,8 +1534,8 @@ local screenWidth = viewportSize.X
 local screenHeight = viewportSize.Y
 
 -- 設定比例
-local widthScale = 0.75
-local heightScale = 0.8
+local widthScale = 0.65
+local heightScale = 0.7
 
 -- 計算基礎尺寸
 local calculatedWidth = screenWidth * widthScale
@@ -1545,14 +1562,16 @@ camera:GetPropertyChangedSignal("ViewportSize"):Connect(function()
     local screenWidth = viewportSize.X
     local screenHeight = viewportSize.Y
 
-    local calculatedWidth = math.clamp(screenWidth * 0.75, 600, 1200)
-    local calculatedHeight = math.clamp(screenHeight * 0.8, 400, 900)
+    local calculatedWidth = math.clamp(screenWidth * 0.65, 600, 1100)
+    local calculatedHeight = math.clamp(screenHeight * 0.7, 400, 850)
 
     mainFrame.Size = UDim2.new(0, calculatedWidth, 0, calculatedHeight)
     mainFrame.Position = UDim2.new(
         0.5, -calculatedWidth/2,
         0.5, -calculatedHeight/2
     )
+
+    updateToggleByMainFrame()
 end)
 
 local originalSize = mainFrame.Size
