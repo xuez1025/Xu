@@ -1441,7 +1441,7 @@ StartCamlock()
 
 local Hitbox = {
     Enabled = false,
-    Size = 5,
+    Size = 1,
     Transparency = 0.5,
     Connections = {}
 }
@@ -1488,6 +1488,27 @@ end
 function Hitbox:Stop()
     self.Enabled = false
 end
+
+-- 假設已經有一個核心模組處理攝影機
+local CameraController = {}
+CameraController.MinZoom = 1000
+CameraController.MaxZoom = 10000
+CameraController.Step = 100
+CameraController.CurrentZoom = 1000
+
+function CameraController:SetZoom(value)
+    value = tonumber(value)
+    if value then
+        if value < self.MinZoom then value = self.MinZoom end
+        if value > self.MaxZoom then value = self.MaxZoom end
+        value = math.floor(value / self.Step) * self.Step
+        self.CurrentZoom = value
+        game.Players.LocalPlayer.CameraMaxZoomDistance = value
+    end
+end
+
+-- 初始化
+CameraController:SetZoom(CameraController.CurrentZoom)
 
 -- ===== ScreenGui =====
 local screenGui = Instance.new("ScreenGui")
@@ -2208,50 +2229,8 @@ end)
 
 y = y + 60
 
-createOptionRow(contentFrame, y, "碰撞箱", function(row)
-
-    local switchBg = Instance.new("Frame")
-    switchBg.Size = UDim2.new(0,60,0.5,0)
-    switchBg.Position = UDim2.new(1,-70,0.25,0)
-    switchBg.BackgroundColor3 = Hitbox.Enabled
-        and Color3.fromRGB(0,200,0)
-        or Color3.fromRGB(100,100,100)
-    switchBg.Parent = row
-    Instance.new("UICorner", switchBg).CornerRadius = UDim.new(0,20)
-
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0,28,1,0)
-    knob.Position = Hitbox.Enabled
-        and UDim2.new(1,-28,0,0)
-        or UDim2.new(0,0,0,0)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    knob.Parent = switchBg
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,20)
-
-    local function toggle()
-        Hitbox.Enabled = not Hitbox.Enabled
-
-        if Hitbox.Enabled then
-            knob:TweenPosition(UDim2.new(1,-28,0,0),"Out","Quad",0.2,true)
-            switchBg.BackgroundColor3 = Color3.fromRGB(0,200,0)
-            Hitbox:Start()
-        else
-            knob:TweenPosition(UDim2.new(0,0,0,0),"Out","Quad",0.2,true)
-            switchBg.BackgroundColor3 = Color3.fromRGB(100,100,100)
-            Hitbox:Stop()
-        end
-    end
-
-    switchBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            toggle()
-        end
-    end)
-end)
-
-y = y + 60
-
-createOptionRow(contentFrame, y, "碰撞箱調整:", function(row)
+-- 碰撞箱直接控制，不需要按鈕
+createOptionRow(contentFrame, y, "碰撞箱:", function(row)
 
     local inputBox = Instance.new("TextBox")
     inputBox.Size = UDim2.new(0,80,0.6,0)
@@ -2268,6 +2247,16 @@ createOptionRow(contentFrame, y, "碰撞箱調整:", function(row)
     slider.Position = UDim2.new(0,220,0.35,0)
     slider.BackgroundColor3 = Color3.fromRGB(100,100,100)
     slider.Parent = row
+
+                    local maxLabel = Instance.new("TextLabel")
+                    maxLabel.Size = UDim2.new(0,80,1,0)
+                    maxLabel.Position = UDim2.new(0,430,0,0)
+                    maxLabel.BackgroundTransparency = 1
+                    maxLabel.Text = "(max:20)"
+                    maxLabel.TextColor3 = Color3.fromRGB(200,200,200)
+                    maxLabel.TextScaled = true
+                    maxLabel.TextXAlignment = Enum.TextXAlignment.Left
+                    maxLabel.Parent = row
 
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new(Hitbox.Size / 20,0,1,0)
@@ -2296,15 +2285,13 @@ createOptionRow(contentFrame, y, "碰撞箱調整:", function(row)
                 0,
                 slider.AbsoluteSize.X
             )
-
             local val = math.floor((x / slider.AbsoluteSize.X) * MAX)
             Hitbox.Size = val
             inputBox.Text = tostring(val)
-            fill.Size = UDim2.new(x / slider.AbsoluteSize.X,0,1,0)
+            fill.Size = UDim2.new(val/MAX,0,1,0)
 
-            if Hitbox.Enabled then
-                Hitbox:ApplyAll()
-            end
+            -- 直接應用碰撞箱變化
+            Hitbox:ApplyAll()
         end
     end)
 
@@ -2316,9 +2303,71 @@ createOptionRow(contentFrame, y, "碰撞箱調整:", function(row)
             fill.Size = UDim2.new(val/MAX,0,1,0)
             inputBox.Text = tostring(val)
 
-            if Hitbox.Enabled then
-                Hitbox:ApplyAll()
-            end
+            Hitbox:ApplyAll()
+        end
+    end)
+end)
+
+y = y + 60
+
+createOptionRow(contentFrame, y, "相機縮放:", function(row)
+    local inputBox = Instance.new("TextBox")
+    inputBox.Size = UDim2.new(0,80,0.6,0)
+    inputBox.Position = UDim2.new(0,130,0.2,0)
+    inputBox.BackgroundColor3 = Color3.fromRGB(70,70,70)
+    inputBox.TextColor3 = Color3.fromRGB(255,255,255)
+    inputBox.TextScaled = true
+    inputBox.ClearTextOnFocus = false
+    inputBox.Text = tostring(CameraController.CurrentZoom)
+    inputBox.Parent = row
+
+    local slider = Instance.new("Frame")
+    slider.Size = UDim2.new(0,200,0.3,0)
+    slider.Position = UDim2.new(0,220,0.35,0)
+    slider.BackgroundColor3 = Color3.fromRGB(100,100,100)
+    slider.Parent = row
+
+    local maxLabel = Instance.new("TextLabel")
+    maxLabel.Size = UDim2.new(0,80,1,0)
+    maxLabel.Position = UDim2.new(0,430,0,0)
+    maxLabel.BackgroundTransparency = 1
+    maxLabel.Text = "(max:"..CameraController.MaxZoom..")"
+    maxLabel.TextColor3 = Color3.fromRGB(200,200,200)
+    maxLabel.TextScaled = true
+    maxLabel.TextXAlignment = Enum.TextXAlignment.Left
+    maxLabel.Parent = row
+
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new(CameraController.CurrentZoom / CameraController.MaxZoom,0,1,0)
+    fill.BackgroundColor3 = Color3.fromRGB(255,150,0)
+    fill.Parent = slider
+
+    local MAX = CameraController.MaxZoom
+    local dragging = false
+
+    slider.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true end
+    end)
+    slider.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+    end)
+    slider.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local x = math.clamp(i.Position.X - slider.AbsolutePosition.X,0,slider.AbsoluteSize.X)
+            local val = math.floor((x / slider.AbsoluteSize.X) * MAX / CameraController.Step) * CameraController.Step
+            CameraController:SetZoom(val)
+            inputBox.Text = tostring(val)
+            fill.Size = UDim2.new(x / slider.AbsoluteSize.X,0,1,0)
+        end
+    end)
+
+    -- 也可以監聽文字框直接改值
+    inputBox.FocusLost:Connect(function(enterPressed)
+        local val = tonumber(inputBox.Text)
+        if val then
+            CameraController:SetZoom(val)
+            fill.Size = UDim2.new(CameraController.CurrentZoom / MAX,0,1,0)
+            inputBox.Text = tostring(CameraController.CurrentZoom)
         end
     end)
 end)
