@@ -648,8 +648,8 @@ Scripts["自動v3"] = {
     end
 }
 
--- ================= 狀態 =================
 local V4_ENABLED = false
+local autoV4Connection -- 用來存 RunService 連線
 
 -- ================= 取得 Awakening RemoteFunction =================
 local function getAwakeningRemote()
@@ -1749,7 +1749,7 @@ for i=1,10 do
     btn.Font = Enum.Font.SourceSansBold
 
     if isMobile then
-        btn.TextSize = 20
+        btn.TextSize = 16
         btn.TextScaled = false
     else
         btn.TextScaled = true
@@ -1988,17 +1988,25 @@ createOptionRow(contentFrame, y, "自動v4", function(row)
             }
         ):Play()
 
-        -- 呼叫 Awakening
-        local remote = getAwakeningRemote()
-        if remote then
-            remote:InvokeServer(V4_ENABLED)
-        else
-            warn("Awakening RemoteFunction not found")
+        -- 停止先前的循環
+        if autoV4Connection then
+            autoV4Connection:Disconnect()
+            autoV4Connection = nil
+        end
+
+        -- 如果開啟，開始循環呼叫 RemoteFunction
+        if V4_ENABLED then
+            autoV4Connection = RunService.Heartbeat:Connect(function()
+                local remote = getAwakeningRemote()
+                if remote then
+                    remote:InvokeServer(true)
+                end
+            end)
         end
     end)
 end)
 
-        y = y + 60
+y = y + 60
 
             elseif index == 2 then
                     local y = 10
