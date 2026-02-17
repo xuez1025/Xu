@@ -1,4 +1,10 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Player = Players.LocalPlayer
+local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
+
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
 -- 建立視窗
 local Window = WindUI:CreateWindow({
     Title = "Xu-hub",
@@ -9,6 +15,29 @@ local Window = WindUI:CreateWindow({
     Transparent = true,
     Theme = "Dark",
 })
+
+-- 自動啟用 AutoBuso
+AutoBuso = true
+if AutoBuso then
+    pcall(function()
+        if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
+            CommF:InvokeServer("Buso")
+        end
+    end)
+end
+
+-- 自動武裝色邏輯循環
+task.spawn(function()
+    while task.wait(1) do
+        if AutoBuso then
+            pcall(function()
+                if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
+                    CommF:InvokeServer("Buso")
+                end
+            end)
+        end
+    end
+end)
 
 local Tabs = {
     Auto     = Window:Tab({ Title = "自動",   Icon = "cpu" }),
@@ -24,6 +53,25 @@ local Tabs = {
 }
 
 Tabs.Auto:Section({ Title = "自動" })
+
+Tabs.Auto:Toggle({
+    Title = "自動武裝色",
+    Desc = "開啟或關閉自動武裝色",
+    Value = true, -- 初始為 ON
+    Callback = function(state)
+        AutoBuso = state
+        print("AutoBuso 狀態:", AutoBuso)
+
+        -- 初始啟動時立即呼叫一次
+        if AutoBuso then
+            pcall(function()
+                if Player.Character and not Player.Character:FindFirstChild("HasBuso") then
+                    CommF:InvokeServer("Buso")
+                end
+            end)
+        end
+    end
+})
 
 Tabs.General:Section({ Title = "通用" })
 
