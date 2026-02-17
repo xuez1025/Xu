@@ -17,6 +17,24 @@ local Window = WindUI:CreateWindow({
     Transparent = true,
     Theme = "Dark",
 
+    -- ✅ 使用者頭像 / Profile
+    User = {
+        Enabled = true,
+        Anonymous = false,
+        Callback = function()
+            WindUI:Notify({
+                Title = "User Profile",
+                Content = "User profile clicked!",
+                Duration = 3
+            })
+        end
+    },
+
+    -- ✅ 視覺 / 介面設定
+    Acrylic = false,
+    HideSearchBar = false,
+    SideBarWidth = 200,
+
     -- 🔽 縮小後顯示的浮動按鈕
     OpenButton = {
         Title = "Open Xu-hub",
