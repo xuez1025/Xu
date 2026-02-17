@@ -54,8 +54,6 @@ local Window = WindUI:CreateWindow({
 })
 
         -- ================= 核心 ESP 功能 =================
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
         local LocalPlayer = Players.LocalPlayer
 
         ESP_ENABLED = false
@@ -191,7 +189,50 @@ end
 
         Players.PlayerAdded:Connect(setupPlayerESP)
         Players.PlayerRemoving:Connect(removeESP)
-		
+
+--================= 服務 =================
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+
+--================= 變數 =================
+local NOCLIP_ENABLED = false
+local noclipConn = nil
+
+--================= Noclip 核心 =================
+local function setNoclipState(state)
+    NOCLIP_ENABLED = state
+
+    if state then
+        if noclipConn then return end
+        noclipConn = RunService.Stepped:Connect(function()
+            local char = player.Character
+            if not char then return end
+
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end)
+    else
+        if noclipConn then
+            noclipConn:Disconnect()
+            noclipConn = nil
+        end
+
+        local char = player.Character
+        if char then
+            for _, part in ipairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end
+end
+
 -- 自動啟用 AutoBuso
 AutoBuso = true
 if AutoBuso then
@@ -289,6 +330,16 @@ Tabs.General:Toggle({
         end
     end
 })
+
+Tabs.General:Toggle({
+    Title = "Noclip",
+    Desc = "角色可穿牆移動",
+    Value = false,
+    Callback = function(state)
+        setNoclipState(state)
+    end
+})
+
 Tabs.Server:Section({ Title = "Server" })
 
 Tabs.Status:Section({ Title = "狀態" })
