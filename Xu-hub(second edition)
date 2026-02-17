@@ -365,6 +365,33 @@ function Hitbox:Stop()
     self.Enabled = false
 end
 
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local MAX_ZOOM = 10000
+local MIN_ZOOM = 1000
+local STEP = 100
+local CurrentZoom = 1000
+
+-- 初始化攝影機縮放
+player.CameraMaxZoomDistance = CurrentZoom
+
+-- 更新攝影機縮放的函數
+local function SetZoom(value)
+    value = tonumber(value)
+    if not value then return end
+    if value < MIN_ZOOM then value = MIN_ZOOM end
+    if value > MAX_ZOOM then value = MAX_ZOOM end
+    value = math.floor(value / STEP) * STEP
+    CurrentZoom = value
+    player.CameraMaxZoomDistance = value
+end
+
+-- 監聽角色重生
+player.CharacterAdded:Connect(function(char)
+    character = char
+end)
+
 -- 自動啟用 AutoBuso
 AutoBuso = true
 if AutoBuso then
@@ -494,6 +521,22 @@ Tabs.General:Slider({
     Callback = function(value)
         Hitbox.Size = value
         Hitbox:ApplyAll()
+    end
+})
+
+Tabs.General:Slider({
+    Title = "視角縮放",
+    Desc = "調整視角距離",
+    Value = {
+        Min = MIN_ZOOM,
+        Max = MAX_ZOOM,
+        Default = CurrentZoom
+    },
+    Callback = function(value)
+        -- 按步進計算最接近的值
+        local zoomValue = math.floor(value / STEP) * STEP
+        SetZoom(zoomValue)
+        print("Camera Zoom:", zoomValue)
     end
 })
 
