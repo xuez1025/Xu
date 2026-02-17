@@ -75,6 +75,34 @@ task.spawn(function()
     end
 end)
 
+
+local VirtualInputManager = game:GetService("VirtualInputManager")
+
+local AutoV3 = {
+    Enabled = false,
+    _task = nil
+}
+
+local function StartAutoV3()
+    if AutoV3._task then return end
+
+    AutoV3._task = task.spawn(function()
+        while AutoV3.Enabled do
+            -- 按下 T
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.T, false, game)
+            task.wait(0.01)
+            -- 放開 T
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.T, false, game)
+            task.wait(0.1)
+        end
+        AutoV3._task = nil
+    end)
+end
+
+local function StopAutoV3()
+    AutoV3.Enabled = false
+end
+
 local Tabs = {
     General  = Window:Tab({ Title = "通用",   Icon = "house" }),
     Server   = Window:Tab({ Title = "Server", Icon = "server" }),
@@ -115,6 +143,21 @@ Tabs.Auto:Toggle({
                     CommF:InvokeServer("Buso")
                 end
             end)
+        end
+    end
+})
+Tabs.Auto:Toggle({
+    Title = "自動 v3",
+    Desc = "自動開啟或關閉v3",
+    Value = false, -- 初始為 OFF
+    Callback = function(state)
+        AutoV3.Enabled = state
+        print("自動 v3 狀態:", state)
+
+        if state then
+            StartAutoV3()
+        else
+            StopAutoV3()
         end
     end
 })
