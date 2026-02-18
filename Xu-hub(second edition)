@@ -709,6 +709,117 @@ local function startBring()
     end)
 end
 
+--==================================================
+-- Config / State
+--==================================================
+local CHECK_INTERVAL = 1
+local DETECTION_RADIUS = 1000
+local AutoTeleportEnabled = false
+local isTeleporting = false
+
+local hrp, humanoid
+
+--==================================================
+-- Helper Functions
+--==================================================
+local function getCharacterParts()
+    local char = game.Players.LocalPlayer.Character
+    if not char then return nil end
+    hrp = char:FindFirstChild("HumanoidRootPart")
+    humanoid = char:FindFirstChild("Humanoid")
+    if hrp and humanoid then
+        return true
+    end
+    return false
+end
+
+local function enemiesAlive()
+    local enemies = workspace:FindFirstChild("Enemies")
+    if not enemies then return false end
+    for _, npc in ipairs(enemies:GetChildren()) do
+        local hum = npc:FindFirstChild("Humanoid")
+        local root = npc:FindFirstChild("HumanoidRootPart") or npc:FindFirstChild("Head")
+        if hum and hum.Health > 0 and root and hrp then
+            if (root.Position - hrp.Position).Magnitude <= DETECTION_RADIUS then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function bossAlive()
+    local boss = workspace:FindFirstChild("Boss")
+    if boss and boss:FindFirstChild("Humanoid") and boss.Humanoid.Health > 0 then
+        return true
+    end
+    local enemies = workspace:FindFirstChild("Enemies")
+    if enemies then
+        for _, npc in ipairs(enemies:GetChildren()) do
+            if string.find(string.lower(npc.Name), "boss") then
+                local hum = npc:FindFirstChild("Humanoid")
+                if hum and hum.Health > 0 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+local function canTeleport()
+    return not enemiesAlive() and not bossAlive()
+end
+
+local function getClosestExit()
+    local map = workspace:FindFirstChild("Map")
+    if not map then return nil end
+    local dungeon = map:FindFirstChild("Dungeon")
+    if not dungeon then return nil end
+
+    local closest, minDist = nil, math.huge
+    for _, f in ipairs(dungeon:GetChildren()) do
+        if tonumber(f.Name) then
+            local tp = f:FindFirstChild("ExitTeleporter")
+            if tp and tp:FindFirstChild("Root") then
+                local d = (tp.Root.Position - hrp.Position).Magnitude
+                if d < minDist then
+                    minDist = d
+                    closest = tp.Root
+                end
+            end
+        end
+    end
+    return closest
+end
+
+local function teleportToExit(exitRoot)
+    if isTeleporting or not exitRoot then return end
+    isTeleporting = true
+    humanoid.WalkSpeed = 0
+    humanoid.JumpPower = 0
+    hrp.CFrame = exitRoot.CFrame
+    humanoid.WalkSpeed = 16
+    humanoid.JumpPower = 50
+    isTeleporting = false
+end
+
+--==================================================
+-- Auto-Teleport Loop
+--==================================================
+task.spawn(function()
+    while task.wait(CHECK_INTERVAL) do
+        if not AutoTeleportEnabled then continue end
+        if not getCharacterParts() or humanoid.Health <= 0 then continue end
+        if canTeleport() then
+            local exit = getClosestExit()
+            if exit then
+                teleportToExit(exit)
+            end
+        end
+    end
+end)
+
 -- 自動啟用 AutoBuso
 AutoBuso = true
 if AutoBuso then
@@ -1068,7 +1179,7 @@ Tabs.Farm:Toggle({
 
 Tabs.Farm:Slider({
     Title = "飛行高度",
-    Desc = "設定飛行高度 (50m)",
+    Desc = "調整飛行高度 (50m)",
     Value = {
         Min = 0,
         Max = 50,
@@ -1081,7 +1192,7 @@ Tabs.Farm:Slider({
 
 Tabs.Farm:Slider({
     Title = "搜尋範圍",
-    Desc = "設定NPC搜尋範圍 (2000m)",
+    Desc = "調整NPC搜尋範圍 (2000m)",
     Value = {
         Min = 0,
         Max = 2000,
@@ -1094,7 +1205,7 @@ Tabs.Farm:Slider({
 
 Tabs.Farm:Slider({
     Title = "拉怪範圍",
-    Desc = "設定拉怪距離 (250)m)",
+    Desc = "調整拉怪距離 (250)m)",
     Value = {
         Min = 0,
         Max = 250,
@@ -1102,6 +1213,25 @@ Tabs.Farm:Slider({
     },
     Callback = function(value)
         BringNPC.PullRange = value
+    end
+})
+
+Tabs.Farm:Section({ Title = "Dungeon" })
+
+Tabs.Farm:Toggle({
+    Title = "自動傳送",
+    Desc = "自動傳送到出口",
+    Value = false,
+    Callback = function(state)
+        AutoTeleportEnabled = state
+
+        -- 開啟時立即檢查是否可以傳送
+        if AutoTeleportEnabled and getCharacterParts() and canTeleport() then
+            local exit = getClosestExit()
+            if exit then
+                teleportToExit(exit)
+            end
+        end
     end
 })
 
