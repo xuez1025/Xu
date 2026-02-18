@@ -1094,6 +1094,27 @@ local function ApplyLowGraphics(state)
     end
 end
 
+-- =====================
+-- Remove Fog Core
+-- =====================
+local function RemoveFog()
+    local Lighting = game:GetService("Lighting")
+
+    -- 移除 LightingLayers
+    local layers = Lighting:FindFirstChild("LightingLayers")
+    if layers then
+        layers:Destroy()
+    end
+
+    -- 移除 Sky
+    local sky = Lighting:FindFirstChildOfClass("Sky")
+    if sky then
+        sky:Destroy()
+    end
+
+    -- 關閉霧氣
+    Lighting.FogEnd = 9e9
+end
 
 local Tabs = {
     General  = Window:Tab({ Title = "通用",   Icon = "house" }),
@@ -1566,6 +1587,14 @@ Tabs.Settings:Button({
     Callback = function()
         ApplyLowGraphics(true)
         print("低配模式已啟用")
+    end
+})
+
+Tabs.Settings:Button({
+    Title = "Remove Fog",
+    Desc = "按一次啟用Remove Fog",
+    Callback = function()
+        RemoveFog()
     end
 })
 
