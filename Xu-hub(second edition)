@@ -455,6 +455,39 @@ task.spawn(function()
 end)
 
 
+local player = Players.LocalPlayer
+local ATTACK_INTERVAL = 0.01
+local RANGE_MULTIPLIER = 1000
+
+getgenv().AUTO_ATTACK_ENABLED = false
+
+local attackTimer = 0
+
+RunService.Heartbeat:Connect(function(dt)
+	if not getgenv().AUTO_ATTACK_ENABLED then return end
+	
+	local character = player.Character
+	if not character then return end
+
+	local tool = character:FindFirstChildOfClass("Tool")
+	if not tool then return end
+
+	attackTimer += dt
+	if attackTimer < ATTACK_INTERVAL then return end
+	attackTimer = 0
+
+	local handle = tool:FindFirstChild("Handle")
+	if handle and not handle:GetAttribute("HitboxExpanded") then
+		handle.Size = handle.Size * RANGE_MULTIPLIER
+		handle.Transparency = 1
+		handle.CanCollide = false
+		handle:SetAttribute("HitboxExpanded", true)
+	end
+
+	tool:Activate()
+end)
+
+
 -- 自動啟用 AutoBuso
 AutoBuso = true
 if AutoBuso then
@@ -689,6 +722,17 @@ Tabs.PVP:Slider({
     },
     Callback = function(value)
         Settings.Distance = value
+    end
+})
+
+Tabs.PVP:Toggle({
+    Title = "Fruit M1",
+    Desc = "開啟或關閉果實自動普攻",
+    Value = false,
+    Callback = function(state)
+        getgenv().AUTO_ATTACK_ENABLED = state
+        
+        print("Auto Attack State:", state)
     end
 })
 
