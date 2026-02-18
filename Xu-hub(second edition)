@@ -24,7 +24,6 @@ local Window = WindUI:CreateWindow({
     Theme = "Dark",
 
     -- ✅ 使用者頭像 / Profile
-
 User = {
     Enabled = true,
     Anonymous = false,
@@ -488,6 +487,74 @@ RunService.Heartbeat:Connect(function(dt)
 	tool:Activate()
 end)
 
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+--========================
+--        State
+--========================
+local FlyEnabled = false
+local CamlockEnabled = false
+local NoclipEnabled = false
+local TargetPlayer = nil
+local FlySpeed = 350
+
+--========================
+--        FLY
+--========================
+local function EnableFly()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.PlatformStand = true end
+end
+
+local function DisableFly()
+    local char = LocalPlayer.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.PlatformStand = false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp then hrp.Velocity = Vector3.zero end
+end
+
+RunService.RenderStepped:Connect(function()
+    if not FlyEnabled or not TargetPlayer then return end
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    local targetChar = TargetPlayer.Character
+    local targetHRP = targetChar and targetChar:FindFirstChild("HumanoidRootPart")
+    if not hrp or not targetHRP then return end
+    local direction = (targetHRP.Position - hrp.Position)
+    if direction.Magnitude > 0 then
+        hrp.Velocity = direction.Unit * FlySpeed
+    end
+end)
+
+--========================
+--       NOCLIP
+--========================
+RunService.Stepped:Connect(function()
+    if not NoclipEnabled then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.CanCollide = false
+        end
+    end
+end)
+
+--========================
+--       CAMLOCK
+--========================
+RunService.RenderStepped:Connect(function()
+    if not CamlockEnabled or not TargetPlayer then return end
+    if not TargetPlayer.Character then return end
+    local hrp = TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    Camera.CFrame = CFrame.new(Camera.CFrame.Position, hrp.Position)
+end)
 
 -- 自動啟用 AutoBuso
 AutoBuso = true
@@ -734,6 +801,60 @@ Tabs.PVP:Toggle({
         getgenv().AUTO_ATTACK_ENABLED = state
         
         print("Auto Attack State:", state)
+    end
+})
+
+
+local function GetPlayerList()
+    local list = {}
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            table.insert(list, plr.Name)
+        end
+    end
+    return list
+end
+
+-- 玩家 Dropdown
+local playerDropdown = Tabs.PVP:Dropdown({
+    Title = "選擇玩家",
+    Values = GetPlayerList(),
+    Value = nil,
+    Callback = function(option)
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.Name == option then
+                TargetPlayer = plr
+                break
+            end
+        end
+    end
+})
+
+-- 自動更新玩家列表
+Players.PlayerAdded:Connect(function()
+    playerDropdown:Refresh(GetPlayerList())
+end)
+Players.PlayerRemoving:Connect(function()
+    playerDropdown:Refresh(GetPlayerList())
+end)
+
+Tabs.PVP:Toggle({
+    Title = "Fly to Player",
+    Desc = "飛向選定玩家",
+    Value = false,
+    Callback = function(state)
+        FlyEnabled = state
+        NoclipEnabled = state
+        if state then EnableFly() else DisableFly() end
+    end
+})
+
+Tabs.PVP:Toggle({
+    Title = "視角鎖定",
+    Desc = "鎖定目標玩家",
+    Value = false,
+    Callback = function(state)
+        CamlockEnabled = state
     end
 })
 
