@@ -556,6 +556,51 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = CFrame.new(Camera.CFrame.Position, hrp.Position)
 end)
 
+local selectedType = "Melee"   -- 初始選擇武器類型
+local autoEquipEnabled = false
+
+local function equipByType(toolType)
+    selectedType = toolType
+    if autoEquipEnabled then
+        local char = player.Character or player.CharacterAdded:Wait()
+        local hum = char:WaitForChild("Humanoid")
+        for _, tool in ipairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") and tool.ToolTip == toolType then
+                hum:EquipTool(tool)
+                break
+            end
+        end
+    end
+end
+
+local function monitorCurrentTool()
+    task.spawn(function()
+        while true do
+            task.wait(0.1)
+            if autoEquipEnabled then
+                local char = player.Character
+                if char then
+                    local hum = char:FindFirstChildOfClass("Humanoid")
+                    if hum then
+                        local tool = hum:FindFirstChildOfClass("Tool")
+                        if not tool or tool.ToolTip ~= selectedType then
+                            equipByType(selectedType)
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+player.CharacterAdded:Connect(function()
+    task.wait(1)
+    equipByType(selectedType)
+    monitorCurrentTool()
+end)
+
+monitorCurrentTool()
+
 -- 自動啟用 AutoBuso
 AutoBuso = true
 if AutoBuso then
@@ -859,6 +904,31 @@ Tabs.PVP:Toggle({
 })
 
 Tabs.Farm:Section({ Title = "Farm Setting" })
+
+Tabs.Farm:Toggle({
+    Title = "自動裝備",
+    Desc = "開啟或關閉自動裝備功能",
+    Value = false,
+    Callback = function(state)
+        autoEquipEnabled = state
+        if state then
+            equipByType(selectedType)
+        end
+    end
+})
+
+Tabs.Farm:Dropdown({
+    Title = "選擇武器類型",
+    Multi = false,
+    Values = { "Melee", "Fruit", "Sword", "Gun" },
+    Default = "Melee",
+    Callback = function(option)
+        selectedType = option
+        if autoEquipEnabled then
+            equipByType(selectedType)
+        end
+    end
+})
 
 Tabs.Auto:Section({ Title = "自動" })
 
