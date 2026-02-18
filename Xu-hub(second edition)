@@ -1029,6 +1029,72 @@ local function getAwakeningRemote()
     return nil
 end
 
+local LOWGRAPHICS_ENABLED = false
+local Terrain = workspace:FindFirstChildWhichIsA("Terrain")
+local Lighting = game:GetService("Lighting")
+local RunService = game:GetService("RunService")
+
+local function ApplyLowGraphics(state)
+    LOWGRAPHICS_ENABLED = state
+
+    if state then
+        -- Terrain
+        Terrain.WaterWaveSize = 0
+        Terrain.WaterWaveSpeed = 0
+        Terrain.WaterReflectance = 0
+        Terrain.WaterTransparency = 1
+        
+        -- Lighting
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        Lighting.FogStart = 9e9
+
+        -- Render Quality
+        settings().Rendering.QualityLevel = 1
+
+        -- 遍歷遊戲物件
+        for _, v in pairs(game:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CastShadow = false
+                v.Material = Enum.Material.Plastic
+                v.Reflectance = 0
+            elseif v:IsA("Decal") then
+                v.Transparency = 1
+                v.Texture = ""
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Lifetime = NumberRange.new(0)
+            end
+        end
+
+        -- 關閉後處理效果
+        for _, v in pairs(Lighting:GetDescendants()) do
+            if v:IsA("PostEffect") then
+                v.Enabled = false
+            end
+        end
+
+        -- 自動刪除新增特效
+        workspace.DescendantAdded:Connect(function(child)
+            task.spawn(function()
+                if child:IsA("ForceField") 
+                or child:IsA("Sparkles") 
+                or child:IsA("Smoke") 
+                or child:IsA("Fire") 
+                or child:IsA("Beam") then
+                    RunService.Heartbeat:Wait()
+                    child:Destroy()
+                elseif child:IsA("BasePart") then
+                    child.CastShadow = false
+                end
+            end)
+        end)
+    else
+        -- 可選：恢復低配模式前的狀態
+        Lighting.GlobalShadows = true
+    end
+end
+
+
 local Tabs = {
     General  = Window:Tab({ Title = "通用",   Icon = "house" }),
     Server   = Window:Tab({ Title = "Server", Icon = "server" }),
@@ -1491,6 +1557,19 @@ local Keybind = Tabs.Settings:Keybind({
         print("UI 開啟快捷鍵已設定為:", v)
     end
 })
+
+Tabs.Settings:Section({ Title = "提高FPS" })
+
+Tabs.Settings:Button({
+    Title = "低配模式",
+    Desc = "按一次啟用低配模式",
+    Callback = function()
+        ApplyLowGraphics(true)
+        print("低配模式已啟用")
+    end
+})
+
+Tabs.Settings:Section({ Title = "遊戲內" })
 
 Tabs.Settings:Toggle({
     Title = "移動速度",
