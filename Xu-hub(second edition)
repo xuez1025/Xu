@@ -1412,8 +1412,8 @@ local DiscordSection = Tabs.Status:Section({
 Tabs.Status:Button({
     Title = "Copy Discord Link",
     Callback = function()
-        setclipboard("https://discord.gg/ptec6vhQtf") -- 複製連結
-        WindUI:Notify({ -- 顯示通知
+        setclipboard("https://discord.gg/ptec6vhQtf")
+        WindUI:Notify({
             Title = "Discord Link",
             Content = "已成功複製 Discord 連結！",
             Duration = 3
@@ -1422,19 +1422,34 @@ Tabs.Status:Button({
 })
 
 -- ====== 更新資訊函數 ======
+-- 初始化 FPS 計算
+local lastTime = tick()
+local frameCount = 0
+local fps = 0
+
+-- 每一幀增加計數
+RunService.RenderStepped:Connect(function()
+    frameCount = frameCount + 1
+end)
+
 task.spawn(function()
     while true do
         task.wait(0.5) -- 每 0.5 秒更新一次
 
-        -- 玩家數
+        -- 玩家數（當前/最大）
         if PlayerSection.SetTitle then
-            PlayerSection:SetTitle(string.format("Players: %d", #Players:GetPlayers()))
+            local currentPlayers = #Players:GetPlayers()
+            local maxPlayers = Players.MaxPlayers or 20 -- 若未設定最大人數預設 20
+            PlayerSection:SetTitle(string.format("Players: %d/%d", currentPlayers, maxPlayers))
         end
 
         -- 本地時間
         local t = os.date("*t")
         if TimeSection.SetTitle then
-            TimeSection:SetTitle(string.format("Local Time: %04d-%02d-%02d %02d:%02d", t.year, t.month, t.day, t.hour, t.min))
+            TimeSection:SetTitle(string.format(
+                "Local Time: %04d-%02d-%02d %02d:%02d:%02d",
+                t.year, t.month, t.day, t.hour, t.min, t.sec
+            ))
         end
 
         -- Ping
@@ -1443,10 +1458,15 @@ task.spawn(function()
             PingSection:SetTitle(string.format("Ping: %.0f ms", ping))
         end
 
-        -- FPS
-        local fps = Workspace:GetRealPhysicsFPS()
+        -- FPS（每秒更新一次）
+        local currentTime = tick()
+        if currentTime - lastTime >= 1 then
+            fps = frameCount / (currentTime - lastTime)
+            frameCount = 0
+            lastTime = currentTime
+        end
         if FPSSection.SetTitle then
-            FPSSection:SetTitle(string.format("FPS: %.0f", fps))
+            FPSSection:SetTitle(string.format("FPS: %.0f/s", fps))
         end
 
         -- Game Time
