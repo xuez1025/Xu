@@ -20,14 +20,15 @@ local WindUI = loadstring(game:HttpGet(
 ))()
 
 -- 建立視窗（已整合 OpenButton）
-local Window = WindUI:CreateWindow({
-    Title = "Xu-hub",
-    Icon = "user-check",
-    Author = "by xuez1025",
-    Folder = "Xu-Hub",
-    Size = UDim2.fromOffset(600, 400),
-    Transparent = true,
-    Theme = "Dark",
+local function InitMainHub()
+    local Window = WindUI:CreateWindow({
+        Title = "Xu-hub",
+        Icon = "user-check",
+        Author = "by xuez1025",
+        Folder = "Xu-Hub",
+        Size = UDim2.fromOffset(600, 400),
+        Transparent = true,
+        Theme = "Dark",
 
     -- ✅ 使用者頭像 / Profile
 User = {
@@ -2120,3 +2121,28 @@ Tabs.Teleport:Dropdown({
 Tabs.Fun:Section({ Title = "娛樂" })
 
 Tabs.Other:Section({ Title = "其他" })
+
+end
+
+WindUI:Popup({
+    Title = "Xu-Hub",
+    Icon = "shield-check",
+    Content = "歡迎使用 Xu-hub 點擊下方執行以啟動介面",
+    Buttons = {
+        {
+            Title = "取消",
+            Callback = function() 
+                print("User cancelled.") 
+            end,
+            Variant = "Tertiary",
+        },
+        {
+            Title = "執行",
+            Icon = "play",
+            Callback = function()
+                InitMainHub() -- 玩家點擊後才啟動主選單
+            end,
+            Variant = "Primary",
+        }
+    }
+})
