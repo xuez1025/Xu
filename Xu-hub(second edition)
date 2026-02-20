@@ -8,12 +8,17 @@ local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
+local player = Players.LocalPlayer
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
 
 local CommF = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("CommF_")
 local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 local PlaceId = game.PlaceId
 local Camera = workspace.CurrentCamera
 local Terrain = workspace:FindFirstChildWhichIsA("Terrain")
+local explosionEnabled = false
 
 -- ================= 世界判斷 =================
 local currentPlaceId = game.PlaceId
@@ -992,6 +997,50 @@ local function InitMainHub()
         }
     })
 
+-- 放大倍率
+local scaleFactor = 2
+
+-- Tween設定
+local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+
+-- 儲存原始大小
+local originalSizes = {}
+
+-- 放大角色函數
+local function scaleCharacter(character)
+    for _, part in pairs(character:GetChildren()) do
+        if part:IsA("BasePart") then
+            if not originalSizes[part] then
+                originalSizes[part] = part.Size
+            end
+
+            local goalSize = part.Size * scaleFactor
+            local tween = TweenService:Create(part, tweenInfo, {Size = goalSize})
+            tween:Play()
+
+            part.CanCollide = false
+        end
+    end
+end
+
+-- 恢復角色函數
+local function resetCharacter(character)
+    for part, size in pairs(originalSizes) do
+        if part and part.Parent then
+            local tween = TweenService:Create(part, tweenInfo, {Size = size})
+            tween:Play()
+            part.CanCollide = true
+        end
+    end
+end
+
+local function createExplosion(position)
+    local explosion = Instance.new("Explosion")
+    explosion.Position = position
+    explosion.BlastPressure = 100 -- 不傷害
+    explosion.Parent = workspace
+end
+
     local Tabs = {
         General  = Window:Tab({ Title = "通用",   Icon = "house" }),
         Server   = Window:Tab({ Title = "Server", Icon = "server" }),
@@ -1278,7 +1327,42 @@ local function InitMainHub()
     end
 
     -- Fun / Other
-    Tabs.Fun:Section({ Title = "娛樂" })
+    Tabs.Fun:Section({ Title = "娛樂(視覺型)" })
+
+Tabs.Fun:Button({
+    Title = "身體放大",
+    Desc = "按一次觸發角色放大",
+    Callback = function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        scaleCharacter(char)
+    end
+})
+
+Tabs.Fun:Button({
+    Title = "恢復身體",
+    Desc = "按一次恢復角色大小",
+    Callback = function()
+        local char = player.Character or player.CharacterAdded:Wait()
+        resetCharacter(char)
+    end
+})
+
+Tabs.Fun:Toggle({
+    Title = "點擊爆炸",
+    Desc = "炸到自己會死 小心使用",
+    Value = false,
+    Callback = function(state)
+        explosionEnabled = state
+    end
+})
+
+-- 監聽滑鼠點擊
+mouse.Button1Down:Connect(function()
+    if explosionEnabled then
+        createExplosion(mouse.Hit.Position)
+    end
+end)
+
     Tabs.Other:Section({ Title = "其他" })
 end
 
