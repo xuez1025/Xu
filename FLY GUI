@@ -418,6 +418,6 @@ end)
 -- ───────────────────────────────────────
 StarterGui:SetCore("SendNotification", {
 	Title    = "FLY GUI V3";
-	Text     = "Noclip 已整合";
+	Text     = "Noclip 已增加";
 	Duration = 4;
 })
