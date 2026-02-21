@@ -8,11 +8,11 @@ local LocalPlayer = Players.LocalPlayer
 --  COLOUR PALETTE  (change here only)
 -- ───────────────────────────────────────
 local C = {
-	bg         = Color3.fromRGB(18,  18,  24),   -- window body
-	header     = Color3.fromRGB(28,  28,  38),   -- title bar
-	accent     = Color3.fromRGB(100, 180, 255),  -- blue accent
-	btnFly     = Color3.fromRGB(100, 220, 130),  -- fly toggle (off)
-	btnFlyOn   = Color3.fromRGB(255, 100, 100),  -- fly toggle (on)
+	bg         = Color3.fromRGB(18,  18,  24),
+	header     = Color3.fromRGB(28,  28,  38),
+	accent     = Color3.fromRGB(100, 180, 255),
+	btnFly     = Color3.fromRGB(100, 220, 130),
+	btnFlyOn   = Color3.fromRGB(255, 100, 100),
 	btnPlus    = Color3.fromRGB(100, 220, 130),
 	btnMinus   = Color3.fromRGB(255, 100, 100),
 	btnClose   = Color3.fromRGB(220,  60,  60),
@@ -23,7 +23,7 @@ local C = {
 }
 
 -- ───────────────────────────────────────
---  UTILITY  – rounded corner helper
+--  UTILITY
 -- ───────────────────────────────────────
 local function corner(parent, radius)
 	local c = Instance.new("UICorner")
@@ -38,43 +38,25 @@ local function stroke(parent, color, thickness)
 	s.Parent = parent
 end
 
-local function label(parent, text, size, color, bold)
-	local l = Instance.new("TextLabel")
-	l.Parent        = parent
-	l.BackgroundTransparency = 1
-	l.Size          = UDim2.fromScale(1, 1)
-	l.Text          = text
-	l.TextColor3    = color or C.text
-	l.TextSize      = size or 13
-	l.Font          = bold and Enum.Font.GothamBold or Enum.Font.Gotham
-	l.TextXAlignment = Enum.TextXAlignment.Center
-	return l
-end
-
 local function btn(parent, text, size, pos, bgColor, textSize)
 	local b = Instance.new("TextButton")
-	b.Parent          = parent
-	b.Size            = size
-	b.Position        = pos
+	b.Parent           = parent
+	b.Size             = size
+	b.Position         = pos
 	b.BackgroundColor3 = bgColor or C.accent
-	b.TextColor3      = C.text
-	b.Text            = text
-	b.TextSize        = textSize or 13
-	b.Font            = Enum.Font.GothamBold
-	b.AutoButtonColor = false
+	b.TextColor3       = C.text
+	b.Text             = text
+	b.TextSize         = textSize or 13
+	b.Font             = Enum.Font.GothamBold
+	b.AutoButtonColor  = false
 	corner(b, 6)
-	-- hover effect
-	b.MouseEnter:Connect(function()
-		b.BackgroundTransparency = 0.25
-	end)
-	b.MouseLeave:Connect(function()
-		b.BackgroundTransparency = 0
-	end)
+	b.MouseEnter:Connect(function()  b.BackgroundTransparency = 0.25 end)
+	b.MouseLeave:Connect(function()  b.BackgroundTransparency = 0    end)
 	return b
 end
 
 -- ───────────────────────────────────────
---  BUILD  GUI
+--  BUILD GUI
 -- ───────────────────────────────────────
 local main = Instance.new("ScreenGui")
 main.Name           = "FlyGuiV3"
@@ -84,17 +66,17 @@ main.Parent         = LocalPlayer:WaitForChild("PlayerGui")
 
 -- Window frame
 local Frame = Instance.new("Frame")
-Frame.Name              = "Window"
-Frame.Parent            = main
-Frame.BackgroundColor3  = C.bg
-Frame.Size              = UDim2.new(0, 220, 0, 112)
-Frame.Position          = UDim2.new(0.04, 0, 0.38, 0)
-Frame.Active            = true
-Frame.Draggable         = true
+Frame.Name             = "Window"
+Frame.Parent           = main
+Frame.BackgroundColor3 = C.bg
+Frame.Size             = UDim2.new(0, 220, 0, 112)
+Frame.Position         = UDim2.new(0.04, 0, 0.38, 0)
+Frame.Active           = true
+Frame.Draggable        = true
 corner(Frame, 10)
 stroke(Frame, Color3.fromRGB(50, 50, 70), 1.5)
 
--- ── Title bar ──────────────────────────
+-- Title bar
 local TitleBar = Instance.new("Frame")
 TitleBar.Name             = "TitleBar"
 TitleBar.Parent           = Frame
@@ -102,46 +84,40 @@ TitleBar.BackgroundColor3 = C.header
 TitleBar.Size             = UDim2.new(1, 0, 0, 32)
 TitleBar.Position         = UDim2.new(0, 0, 0, 0)
 corner(TitleBar, 10)
--- mask bottom corners of title bar
+
 local TitleMask = Instance.new("Frame")
-TitleMask.Parent          = TitleBar
+TitleMask.Parent           = TitleBar
 TitleMask.BackgroundColor3 = C.header
-TitleMask.BorderSizePixel = 0
-TitleMask.Size            = UDim2.new(1, 0, 0.5, 0)
-TitleMask.Position        = UDim2.new(0, 0, 0.5, 0)
+TitleMask.BorderSizePixel  = 0
+TitleMask.Size             = UDim2.new(1, 0, 0.5, 0)
+TitleMask.Position         = UDim2.new(0, 0, 0.5, 0)
 
 local TitleText = Instance.new("TextLabel")
-TitleText.Parent          = TitleBar
+TitleText.Parent                = TitleBar
 TitleText.BackgroundTransparency = 1
-TitleText.Size            = UDim2.new(1, -70, 1, 0)
-TitleText.Position        = UDim2.new(0, 12, 0, 0)
-TitleText.Text            = "✈  FLY GUI V3"
-TitleText.TextColor3      = C.accent
-TitleText.TextSize        = 13
-TitleText.Font            = Enum.Font.GothamBold
-TitleText.TextXAlignment  = Enum.TextXAlignment.Left
+TitleText.Size                  = UDim2.new(1, -70, 1, 0)
+TitleText.Position              = UDim2.new(0, 12, 0, 0)
+TitleText.Text                  = "✈  FLY GUI V3"
+TitleText.TextColor3            = C.accent
+TitleText.TextSize              = 13
+TitleText.Font                  = Enum.Font.GothamBold
+TitleText.TextXAlignment        = Enum.TextXAlignment.Left
 
--- Close button
-local closeBtn = btn(TitleBar, "X", UDim2.new(0, 28, 0, 22),
-	UDim2.new(1, -62, 0, 5), C.btnClose, 12)
+local closeBtn = btn(TitleBar, "X", UDim2.new(0, 28, 0, 22), UDim2.new(1, -62, 0, 5), C.btnClose, 12)
+local miniBtn  = btn(TitleBar, "—", UDim2.new(0, 28, 0, 22), UDim2.new(1, -32, 0, 5), C.btnMin,   12)
 
--- Minimize button
-local miniBtn = btn(TitleBar, "—", UDim2.new(0, 28, 0, 22),
-	UDim2.new(1, -32, 0, 5), C.btnMin, 12)
-
--- ── Body ────────────────────────────────
+-- Body
 local Body = Instance.new("Frame")
-Body.Name             = "Body"
-Body.Parent           = Frame
+Body.Name                  = "Body"
+Body.Parent                = Frame
 Body.BackgroundTransparency = 1
-Body.Size             = UDim2.new(1, -16, 0, 68)
-Body.Position         = UDim2.new(0, 8, 0, 38)
+Body.Size                  = UDim2.new(1, -16, 0, 68)
+Body.Position              = UDim2.new(0, 8, 0, 38)
 
--- Row 1:  −  |  [SPEED DISPLAY]  |  +
 local rowH = 30
 local gap  = 6
 
--- Speed box (centre)
+-- Speed box
 local speedBox = Instance.new("Frame")
 speedBox.Parent           = Body
 speedBox.BackgroundColor3 = C.speedBg
@@ -151,37 +127,34 @@ corner(speedBox, 6)
 stroke(speedBox, Color3.fromRGB(55, 55, 75))
 
 local speedLbl = Instance.new("TextLabel")
-speedLbl.Name             = "SpeedLabel"
-speedLbl.Parent           = speedBox
+speedLbl.Name                  = "SpeedLabel"
+speedLbl.Parent                = speedBox
 speedLbl.BackgroundTransparency = 1
-speedLbl.Size             = UDim2.fromScale(1, 0.48)
-speedLbl.Position         = UDim2.fromScale(0, 0.05)
-speedLbl.Text             = "SPEED"
-speedLbl.TextColor3       = C.subtext
-speedLbl.TextSize         = 9
-speedLbl.Font             = Enum.Font.Gotham
+speedLbl.Size                  = UDim2.fromScale(1, 0.48)
+speedLbl.Position              = UDim2.fromScale(0, 0.05)
+speedLbl.Text                  = "SPEED"
+speedLbl.TextColor3            = C.subtext
+speedLbl.TextSize              = 9
+speedLbl.Font                  = Enum.Font.Gotham
 
 local speedVal = Instance.new("TextLabel")
-speedVal.Name             = "SpeedValue"
-speedVal.Parent           = speedBox
+speedVal.Name                  = "SpeedValue"
+speedVal.Parent                = speedBox
 speedVal.BackgroundTransparency = 1
-speedVal.Size             = UDim2.fromScale(1, 0.55)
-speedVal.Position         = UDim2.fromScale(0, 0.45)
-speedVal.Text             = "1"
-speedVal.TextColor3       = C.accent
-speedVal.TextSize         = 16
-speedVal.Font             = Enum.Font.GothamBold
+speedVal.Size                  = UDim2.fromScale(1, 0.55)
+speedVal.Position              = UDim2.fromScale(0, 0.45)
+speedVal.Text                  = "1"
+speedVal.TextColor3            = C.accent
+speedVal.TextSize              = 16
+speedVal.Font                  = Enum.Font.GothamBold
 
--- Row 1 flanks: − and +
 local minusBtn = btn(Body, "−", UDim2.new(0, 60, 0, rowH), UDim2.new(0, 0,   0, 0), C.btnMinus, 20)
 local plusBtn  = btn(Body, "+", UDim2.new(0, 60, 0, rowH), UDim2.new(0, 144, 0, 0), C.btnPlus,  20)
 
--- Row 2:  FLY TOGGLE  (full width)
 local row2Y = rowH + gap
-
 local flyBtn = btn(Body, "FLY  OFF", UDim2.new(1, 0, 0, rowH), UDim2.new(0, 0, 0, row2Y), C.btnFly, 13)
 
--- Minimised pill (hidden by default)
+-- Mini pill
 local MiniPill = Instance.new("Frame")
 MiniPill.Name             = "MiniPill"
 MiniPill.Parent           = main
@@ -195,25 +168,25 @@ corner(MiniPill, 16)
 stroke(MiniPill, Color3.fromRGB(55, 55, 75))
 
 local pillLabel = Instance.new("TextLabel")
-pillLabel.Parent          = MiniPill
+pillLabel.Parent                = MiniPill
 pillLabel.BackgroundTransparency = 1
-pillLabel.Size            = UDim2.new(1, -38, 1, 0)
-pillLabel.Position        = UDim2.new(0, 10, 0, 0)
-pillLabel.Text            = "✈ FLY GUI"
-pillLabel.TextColor3      = C.accent
-pillLabel.TextSize        = 12
-pillLabel.Font            = Enum.Font.GothamBold
-pillLabel.TextXAlignment  = Enum.TextXAlignment.Left
+pillLabel.Size                  = UDim2.new(1, -38, 1, 0)
+pillLabel.Position              = UDim2.new(0, 10, 0, 0)
+pillLabel.Text                  = "✈ FLY GUI"
+pillLabel.TextColor3            = C.accent
+pillLabel.TextSize              = 12
+pillLabel.Font                  = Enum.Font.GothamBold
+pillLabel.TextXAlignment        = Enum.TextXAlignment.Left
 
-local expandBtn = btn(MiniPill, "+", UDim2.new(0, 28, 0, 22),
-	UDim2.new(1, -32, 0, 5), C.btnMin, 12)
+local expandBtn = btn(MiniPill, "+", UDim2.new(0, 28, 0, 22), UDim2.new(1, -32, 0, 5), C.btnMin, 12)
 
 -- ───────────────────────────────────────
 --  STATE
 -- ───────────────────────────────────────
-local speeds    = 1
-local isFlying  = false
-local tpwalking = false
+local speeds     = 1
+local isFlying   = false
+local tpwalking  = false
+local noclipConn = nil   -- Noclip 連線
 
 -- ───────────────────────────────────────
 --  WINDOW CONTROLS
@@ -224,14 +197,14 @@ end)
 
 miniBtn.MouseButton1Click:Connect(function()
 	MiniPill.Position = Frame.Position
-	Frame.Visible  = false
-	MiniPill.Visible = true
+	Frame.Visible     = false
+	MiniPill.Visible  = true
 end)
 
 expandBtn.MouseButton1Click:Connect(function()
-	Frame.Position  = MiniPill.Position
+	Frame.Position   = MiniPill.Position
 	MiniPill.Visible = false
-	Frame.Visible  = true
+	Frame.Visible    = true
 end)
 
 -- ───────────────────────────────────────
@@ -300,12 +273,42 @@ local function setAllStates(hum, enabled)
 end
 
 -- ───────────────────────────────────────
+--  NOCLIP HELPERS
+-- ───────────────────────────────────────
+local function enableNoclip()
+	if noclipConn then noclipConn:Disconnect() end
+	noclipConn = RunService.Stepped:Connect(function()
+		local chr = LocalPlayer.Character
+		if not chr then return end
+		for _, part in ipairs(chr:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = false
+			end
+		end
+	end)
+end
+
+local function disableNoclip()
+	if noclipConn then
+		noclipConn:Disconnect()
+		noclipConn = nil
+	end
+	local chr = LocalPlayer.Character
+	if chr then
+		for _, part in ipairs(chr:GetDescendants()) do
+			if part:IsA("BasePart") then
+				part.CanCollide = true
+			end
+		end
+	end
+end
+
+-- ───────────────────────────────────────
 --  FLY TOGGLE
 -- ───────────────────────────────────────
 flyBtn.MouseButton1Click:Connect(function()
 	isFlying = not isFlying
 
-	-- Update button visual
 	if isFlying then
 		flyBtn.BackgroundColor3 = C.btnFlyOn
 		flyBtn.Text = "FLY  ON"
@@ -324,6 +327,7 @@ flyBtn.MouseButton1Click:Connect(function()
 		hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
 		tpwalking = false
 		LocalPlayer.Character.Animate.Disabled = false
+		disableNoclip()   -- ← 關閉穿牆
 		return
 	end
 
@@ -335,21 +339,21 @@ flyBtn.MouseButton1Click:Connect(function()
 	end
 	setAllStates(hum, false)
 	hum:ChangeState(Enum.HumanoidStateType.Swimming)
+	enableNoclip()   -- ← 開啟穿牆
 
-	-- ── Flight loop ──
 	local isR6 = hum.RigType == Enum.HumanoidRigType.R6
 	local torso = isR6 and speaker.Character:FindFirstChild("Torso")
 	                    or speaker.Character:FindFirstChild("UpperTorso")
 	if not torso then return end
 
-	local bg = Instance.new("BodyGyro",     torso)
-	bg.P          = 9e4
-	bg.maxTorque  = Vector3.new(9e9, 9e9, 9e9)
-	bg.cframe     = torso.CFrame
+	local bg = Instance.new("BodyGyro", torso)
+	bg.P         = 9e4
+	bg.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+	bg.cframe    = torso.CFrame
 
 	local bv = Instance.new("BodyVelocity", torso)
-	bv.velocity   = Vector3.new(0, 0.1, 0)
-	bv.maxForce   = Vector3.new(9e9, 9e9, 9e9)
+	bv.velocity  = Vector3.new(0, 0.1, 0)
+	bv.maxForce  = Vector3.new(9e9, 9e9, 9e9)
 
 	hum.PlatformStand = true
 
@@ -399,6 +403,7 @@ LocalPlayer.CharacterAdded:Connect(function()
 	tpwalking = false
 	flyBtn.BackgroundColor3 = C.btnFly
 	flyBtn.Text = "FLY  OFF"
+	disableNoclip()   -- ← 重生時清除穿牆殘留
 	local chr = LocalPlayer.Character
 	if chr then
 		local h = chr:FindFirstChildWhichIsA("Humanoid")
@@ -413,6 +418,6 @@ end)
 -- ───────────────────────────────────────
 StarterGui:SetCore("SendNotification", {
 	Title    = "FLY GUI V3";
-	Text     = "";
+	Text     = "Noclip 已整合";
 	Duration = 4;
 })
